@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // Specify ECMAScript target version
+    "module": "commonjs", // Specify module code generation
+    "outDir": "./dist/src", // Output directory for compiled files
+    "rootDir": "./src", // Specify the root directory of input files
+    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true // Skip type checking of declaration files
+  },
+  "include": ["src/**/*.ts", "src/**/*.json"], // Include all TypeScript files in the src directory
+  "exclude": ["node_modules", "**/*.spec.ts"] // Exclude test files and node_modules
+}
