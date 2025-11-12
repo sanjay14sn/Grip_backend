@@ -1,6 +1,9 @@
 import mongoose, { Document, ObjectId, Schema, Types, model } from "mongoose";
 import bcrypt from "bcrypt";
 
+/**
+ * Interface: Business Reference
+ */
 interface IBusinessReference {
   firstName: string;
   lastName: string;
@@ -11,6 +14,9 @@ interface IBusinessReference {
   contactSharingGRIPReferences: boolean;
 }
 
+/**
+ * Interface: Terms & Certifications
+ */
 interface ITermsAndCertifications {
   willAttendMeetingsOnTime: boolean;
   willBringVisitors: boolean;
@@ -20,6 +26,9 @@ interface ITermsAndCertifications {
   willContributeBestAbility: boolean;
 }
 
+/**
+ * Interface: Member (Main)
+ */
 export interface IMember extends Document {
   // Authentication
   pin: string;
@@ -53,6 +62,7 @@ export interface IMember extends Document {
     otherNetworkingOrgs?: string;
     isOtherNetworkingOrgs?: boolean;
     education?: string;
+    pins?: mongoose.Types.ObjectId[]; // ✅ added field
   };
 
   // Business Address
@@ -102,12 +112,15 @@ export interface IMember extends Document {
   deletedBy?: ObjectId;
 }
 
+/**
+ * Subschemas
+ */
 const businessReferenceSchema = new Schema<IBusinessReference>({
-  firstName: { type: String, },
+  firstName: { type: String },
   lastName: { type: String },
   businessName: { type: String },
-  phoneNumber: { type: String, },
-  relationship: { type: String, },
+  phoneNumber: { type: String },
+  relationship: { type: String },
   contactSharingGRIP: { type: Boolean, default: false },
   contactSharingGRIPReferences: { type: Boolean, default: false },
 });
@@ -121,24 +134,19 @@ const termsAndCertificationsSchema = new Schema<ITermsAndCertifications>({
   willContributeBestAbility: { type: Boolean, default: false },
 });
 
+/**
+ * Main Member Schema
+ */
 const memberSchema = new Schema<IMember>(
   {
     // Authentication
-    pin: {
-      type: String,
-    },
+    pin: { type: String },
     fcmToken: { type: String },
+
+    // Chapter Info
     chapterInfo: {
-      countryName: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      stateName: {
-        type: String,
-        required: true,
-        trim: true,
-      },
+      countryName: { type: String, required: true, trim: true },
+      stateName: { type: String, required: true, trim: true },
       zoneId: { type: Schema.Types.ObjectId, ref: "Zone", required: true },
       chapterId: {
         type: Schema.Types.ObjectId,
@@ -149,6 +157,8 @@ const memberSchema = new Schema<IMember>(
       whoInvitedYou: { type: String, required: true },
       howDidYouHearAboutGRIP: { type: String, required: true },
     },
+
+    // Personal Details
     personalDetails: {
       profileImage: {
         docName: { type: String },
@@ -165,7 +175,14 @@ const memberSchema = new Schema<IMember>(
       otherNetworkingOrgs: { type: String },
       isOtherNetworkingOrgs: { type: Boolean, required: true },
       education: { type: String },
+      pins: {
+        type: [{ type: Schema.Types.ObjectId, ref: "Pin" }],
+        required: false,
+        default: [],
+      },
     },
+
+    // Business Address
     businessAddress: {
       addressLine1: { type: String, required: true },
       addressLine2: { type: String, required: true },
@@ -173,6 +190,8 @@ const memberSchema = new Schema<IMember>(
       city: { type: String, required: true },
       postalCode: { type: String, required: true },
     },
+
+    // Contact Details
     contactDetails: {
       email: { type: String, required: true },
       mobileNumber: { type: String, required: true },
@@ -180,12 +199,18 @@ const memberSchema = new Schema<IMember>(
       website: { type: String },
       gstNumber: { type: String },
     },
+
+    // Business Details
     businessDetails: {
       businessDescription: { type: String },
       yearsInBusiness: { type: String },
     },
+
+    // References & Terms
     businessReferences: [businessReferenceSchema],
     termsAndCertifications: termsAndCertificationsSchema,
+
+    // Role & Status
     role: { type: Schema.Types.ObjectId, ref: "Role" },
     isHeadtable: { type: Boolean, default: false },
     status: {
@@ -193,10 +218,9 @@ const memberSchema = new Schema<IMember>(
       enum: ["pending", "active", "decline"],
       default: "pending",
     },
-    type: {
-      type: String,
-      default: "member",
-    },
+    type: { type: String, default: "member" },
+
+    // System Fields
     isActive: { type: Number, default: 0 },
     isDelete: { type: Number, default: 0 },
     deletedAt: { type: Date },
@@ -207,7 +231,9 @@ const memberSchema = new Schema<IMember>(
   { timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } }
 );
 
-// Indexes for better query performance
+/**
+ * Indexes
+ */
 memberSchema.index({ "contactDetails.mobileNumber": 1 }, { unique: true });
 memberSchema.index({
   "personalDetails.firstName": 1,
@@ -216,7 +242,9 @@ memberSchema.index({
 memberSchema.index({ "chapterInfo.chapterId": 1 });
 memberSchema.index({ isDelete: 1 });
 
-// Hash pin before saving
+/**
+ * Hash pin before saving
+ */
 memberSchema.pre("save", async function (next) {
   const member = this as any;
   if (member.isModified("pin")) {

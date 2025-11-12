@@ -92,6 +92,11 @@ class PersonalDetailsDto {
   @IsString()
   @IsOptional()
   education?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  pins?: string[];
 }
 
 class BusinessAddressDto {
@@ -223,6 +228,11 @@ export class UpdateMemberTypeDto {
 
   @IsOptional()
   role?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  pins?: string[];
 }
 
 export class UpdateMemberDto {
@@ -283,6 +293,7 @@ export class UpdateMemberDto {
   @IsOptional()
   type?: string = "member";
 }
+
 export class UpdateProfileMemberDto {
   @IsOptional()
   @IsString()
