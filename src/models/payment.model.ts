@@ -13,6 +13,7 @@ export interface IPayment extends Document {
         docPath: string;
         originalName: string;
     };
+    hotelName?: string;
     amount: number;
     chapterId: ObjectId[];
     comments?: string;
@@ -36,6 +37,11 @@ const paymentSchema = new Schema<IPayment>(
             type: String,
             required: true,
             enum: ['meeting', 'event'],
+        },
+        // ✅ Added hotelName field
+        hotelName: {
+            type: String,
+            required: true,
         },
         topic: {
             type: String,

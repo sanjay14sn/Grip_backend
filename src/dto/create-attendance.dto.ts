@@ -28,6 +28,11 @@ export class CreateAttendanceDto {
     @IsOptional()
     @Type(() => LocationDto)
     userLocation?: LocationDto;
+
+    // ✅ Add your extra field here
+    @IsOptional()
+    @IsString()
+    from?: string; // or enum type if you know possible values
 }
 
 export class UpdateAttendanceDto {

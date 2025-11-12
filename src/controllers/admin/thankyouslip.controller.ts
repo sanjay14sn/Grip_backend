@@ -371,4 +371,39 @@ export default class ThankYouSlipController {
             });
         }
     }
+
+    @Patch('/delete/:id')
+    async deleteThankYouSlip(@Param('id') id: string, @Res() res: Response) {
+        try {
+            // Find the ThankYouSlip record by ID
+            const thankYouSlipRecord = await ThankYouSlip.findById(id);
+
+            if (!thankYouSlipRecord) {
+                throw new NotFoundError('Thank you slip record not found');
+            }
+
+            // Set isDeleted flag
+            thankYouSlipRecord.isDelete = 1;
+            thankYouSlipRecord.updatedAt = new Date();
+
+            await thankYouSlipRecord.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Thank you slip deleted successfully (soft delete)',
+                data: thankYouSlipRecord,
+            });
+        } catch (error: unknown) {
+            console.error('Error deleting Thank You Slip:', error);
+
+            if (error instanceof NotFoundError || error instanceof BadRequestError) {
+                throw error;
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete Thank You Slip',
+            });
+        }
+    }
 }

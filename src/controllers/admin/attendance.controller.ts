@@ -74,6 +74,30 @@ export default class AttendanceController {
                 isDelete: 0
             });
 
+            // ✅ EDIT MODE
+            if (attendanceData?.from === 'edit') {
+                console.log(attendanceData,"eeeee")
+                if (!existingAttendance) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'No existing attendance record found to edit',
+                    });
+                }
+                console.log(attendanceData,"dffffff")
+                existingAttendance.status = attendanceData.status || existingAttendance.status;
+                existingAttendance.updatedAt = new Date();
+                existingAttendance.updatedBy = (req as any).user.id;
+
+                await existingAttendance.save();
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Attendance updated successfully',
+                    data: existingAttendance,
+                });
+            }
+
+            // ✅ CREATION MODE (same as before)
             if (existingAttendance) {
                 return res.status(400).json({
                     success: false,
@@ -88,7 +112,7 @@ export default class AttendanceController {
             // Calculate time windows
             const earliestMarkTime = new Date(meetingStartTime.getTime() - 2.5 * 60 * 60 * 1000); // 2.5 hours before
             const afterGraceTime = new Date(meetingStartTime.getTime() + 10 * 60 * 1000); // 10 minutes after start
-            const finalDeadline = new Date(meetingEndTime.getTime() + 60 * 60 * 1000); // 1 hour after end
+            const finalDeadline = new Date(meetingEndTime.getTime() + 10 * 60 * 60 * 1000); // 10 hour after end
 
             // Check if current time is within allowed window
             if (now < earliestMarkTime) {

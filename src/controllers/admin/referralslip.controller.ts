@@ -291,4 +291,42 @@ export default class ReferralSlipController {
             });
         }
     }
+
+    @Patch('/delete/:id')
+    async softDeleteReferralSlip(
+        @Param('id') id: string,
+        @Res() res: Response
+    ) {
+        try {
+            // Check if the record exists
+            const referralSlipRecord = await ReferralSlipModel.findById(id);
+
+            if (!referralSlipRecord) {
+                throw new NotFoundError('Referral slip record not found');
+            }
+
+            // Update the isDelete flag
+            referralSlipRecord.isDelete = 1;
+            referralSlipRecord.updatedAt = new Date();
+
+            await referralSlipRecord.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Referral slip deleted successfully (soft delete)',
+                data: referralSlipRecord,
+            });
+        } catch (error: unknown) {
+            console.error('Error soft deleting referral slip:', error);
+
+            if (error instanceof NotFoundError || error instanceof BadRequestError) {
+                throw error;
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete referral slip',
+            });
+        }
+    }
 }

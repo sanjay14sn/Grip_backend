@@ -293,4 +293,37 @@ export default class TestimonialSlipController {
         }
     }
 
+    @Patch("/delete/:id")
+    async deleteTestimonial(@Param("id") id: string, @Res() res: Response) {
+        try {
+            const testimonialRecord = await TestimonialSlip.findById(id);
+
+            if (!testimonialRecord) {
+                throw new NotFoundError("Testimonial record not found");
+            }
+
+            testimonialRecord.isDelete = 1;
+            testimonialRecord.updatedAt = new Date();
+
+            await testimonialRecord.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Testimonial deleted successfully (soft delete)",
+                data: testimonialRecord,
+            });
+        } catch (error: unknown) {
+            console.error("Error deleting testimonial:", error);
+
+            if (error instanceof NotFoundError || error instanceof BadRequestError) {
+                throw error;
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: "Failed to delete testimonial",
+            });
+        }
+    }
+
 }

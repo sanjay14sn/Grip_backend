@@ -11,6 +11,7 @@ import {
     NotFoundError,
     Patch,
     UseBefore,
+    Delete,
 } from "routing-controllers";
 import { Request, Response } from "express";
 import { OneToOne, IOneToOne } from "../../models/onetoone.model";
@@ -300,6 +301,50 @@ export default class OneToOneController {
                 success: false,
                 message: 'Failed to update status',
             });
+        }
+    }
+
+    @Patch("/delete/:id")
+    async deleteOneToOneById(
+        @Param("id") id: string,
+        @Res() res: Response
+    ) {
+        try {
+            console.log(id,"DDDDDDD");
+            
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({ success: false, message: "Invalid id" });
+            }
+
+            const deleted = await OneToOne.findOneAndUpdate(
+                { _id: id, isDelete: 0 },
+                {
+                    $set: {
+                        isDelete: 1,
+                        status: "deleted", // optional: keep consistent with your model
+                        updatedAt: new Date(),
+                    },
+                },
+                { new: true }
+            ).select("fromMember toMember whereDidYouMeet date address status isDelete");
+
+            if (!deleted) {
+                return res.status(404).json({
+                    success: false,
+                    message: "OneToOne record not found or already deleted",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "OneToOne record deleted successfully",
+                data: deleted,
+            });
+        } catch (error: unknown) {
+            console.error("Error deleting OneToOne by id:", error);
+            throw new InternalServerError(
+                error instanceof Error ? error.message : "Failed to delete record"
+            );
         }
     }
 }

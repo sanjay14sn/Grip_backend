@@ -34,6 +34,11 @@ export class CreatePaymentDto {
     @IsString()
     topic!: string;
 
+
+    @IsOptional()
+    @IsString()
+    hotelName?: string; // ✅ Added hotelName field
+
     @ValidateNested()
     @IsOptional()
     @Type(() => PaymentImageDto)
