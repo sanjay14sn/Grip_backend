@@ -129,6 +129,89 @@ export default class MemberController {
     }
   }
 
+
+  // Public version (skips token validation)
+  @Get("/by-chapter/public/:chapterId")
+  async getMembersByChapterIdPublic(
+    @Param("chapterId") chapterId: string,
+    @QueryParams() query: ListMembersDto,
+    @Res() res: Response
+  ) {
+    try {
+      const { search, sort = "desc", sortBy = "createdAt" } = query;
+
+      const queryConditions: any[] = [
+        { $match: { isDelete: 0, status: "active" } },
+      ];
+
+      if (chapterId) {
+        if (!Types.ObjectId.isValid(chapterId))
+          return res.status(400).json({ success: false, message: "Invalid chapter ID format" });
+        queryConditions[0].$match["chapterInfo.chapterId"] = new Types.ObjectId(chapterId);
+      }
+
+      if (search) {
+        const searchRegex = new RegExp(search, "i");
+        queryConditions[0].$match.$or = [
+          { "personalDetails.firstName": searchRegex },
+          { "personalDetails.lastName": searchRegex },
+          { "contactDetails.email": searchRegex },
+          { "contactDetails.mobileNumber": searchRegex },
+          { "chapterInfo.countryName": searchRegex },
+          { "chapterInfo.stateName": searchRegex },
+        ];
+      }
+
+      const lookupStages = [
+        {
+          $lookup: {
+            from: "zones",
+            localField: "chapterInfo.zoneId",
+            foreignField: "_id",
+            as: "chapterInfo.zoneId",
+          },
+        },
+        { $unwind: { path: "$chapterInfo.zoneId", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "chapters",
+            localField: "chapterInfo.chapterId",
+            foreignField: "_id",
+            as: "chapterInfo.chapterId",
+          },
+        },
+        { $unwind: { path: "$chapterInfo.chapterId", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "cids",
+            localField: "chapterInfo.CIDId",
+            foreignField: "_id",
+            as: "chapterInfo.CIDId",
+          },
+        },
+        { $unwind: { path: "$chapterInfo.CIDId", preserveNullAndEmptyArrays: true } },
+      ];
+
+      const sortStage = { $sort: { [sortBy]: sort === "desc" ? -1 : 1 } };
+      const pipeline = [...queryConditions, ...lookupStages, sortStage];
+
+      const members = await Member.aggregate(pipeline);
+
+      return res.status(200).json({
+        success: true,
+        message: "Members fetched successfully (public)",
+        data: members,
+      });
+    } catch (error: unknown) {
+      console.error("Error fetching members (public):", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch members (public)",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
   @Post("/")
   async createMember(
     @Body({ validate: true }) memberData: CreateMemberDto,

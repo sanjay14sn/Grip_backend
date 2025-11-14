@@ -24,4 +24,33 @@ export class CreateVisitorDto {
   @IsDate()
   @Type(() => Date)
   visitDate!: Date;
+
+  // --- Optional fields below ---
+  @IsString()
+  @IsOptional()
+  zone?: string;
+
+  @IsString()
+  @IsOptional()
+  zoneId?: string;
+
+  @IsString()
+  @IsOptional()
+  chapter?: string;
+
+  @IsString()
+  @IsOptional()
+  chapterId?: string;
+
+  @IsString()
+  @IsOptional()
+  invited_from?: string;
+
+  @IsString()
+  @IsOptional()
+  invited_by_member?: string;
+
+  @IsString()
+  @IsOptional()
+  chapter_directory_name?: string;
 }
