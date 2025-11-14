@@ -19,7 +19,6 @@ import { Response, Request } from "express";
 import {
   CreateMemberDto,
   UpdateMemberDto,
-  UpdateProfileMemberDto,
 } from "../../dto/create-member.dto";
 import { ListMembersDto } from "../../dto/list-member.dto";
 import { UpdatePinDto } from "../../dto/update-pin.dto";
@@ -28,6 +27,8 @@ import { Types } from "mongoose";
 import { Uploads } from "../../utils/uploads/image.upload";
 import bcrypt from "bcrypt";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
+import { UpdateProfileMemberDto } from "../../dto/update-profile-member.dto";
+
 @JsonController("/api/mobile/members")
 export default class MemberController {
   @Get("/by-chapter/:chapterId")
@@ -568,7 +569,7 @@ export default class MemberController {
       }
       throw new InternalServerError(
         "Failed to update member: " +
-        (error instanceof Error ? error.message : JSON.stringify(error))
+          (error instanceof Error ? error.message : JSON.stringify(error))
       );
     }
   }
@@ -586,66 +587,42 @@ export default class MemberController {
         throw new NotFoundError("Member not found");
       }
 
-      // Update only the allowed fields
-      if (memberData?.firstName) {
-        existingMember.personalDetails.firstName = memberData.firstName;
-      }
-      if (memberData?.lastName) {
-        existingMember.personalDetails.lastName = memberData.lastName;
-      }
-      if (memberData?.companyName) {
-        existingMember.personalDetails.companyName = memberData.companyName;
-      }
-      if (memberData?.website) {
-        existingMember.contactDetails.website = memberData.website;
-      }
-      if (memberData?.email) {
-        existingMember.contactDetails.email = memberData.email;
-      }
-      if (memberData?.addressLine1) {
-        existingMember.businessAddress.addressLine1 = memberData.addressLine1;
-      }
-      if (memberData?.addressLine2) {
-        existingMember.businessAddress.addressLine2 = memberData.addressLine2;
-      }
-      if (memberData?.city) {
-        existingMember.businessAddress.city = memberData.city;
-      }
-      if (memberData?.state) {
-        existingMember.businessAddress.state = memberData.state;
-      }
-      if (memberData?.postalCode) {
-        existingMember.businessAddress.postalCode = memberData.postalCode;
+      // Update nested personalDetails
+      if (memberData.personalDetails) {
+        const { firstName, lastName, dob } = memberData.personalDetails;
+        if (firstName) existingMember.personalDetails.firstName = firstName;
+        if (lastName) existingMember.personalDetails.lastName = lastName;
+        if (dob) existingMember.personalDetails.dob = new Date(dob);
       }
 
-      // Handle profile image upload
-      if (req.files && req.files["profileImage"]) {
-        try {
-          // Handle both single and multiple file uploads
-          const files = Array.isArray(req.files["profileImage"])
-            ? req.files["profileImage"]
-            : [req.files["profileImage"]];
+      // Update nested contactDetails
+      if (memberData.contactDetails) {
+        const { secondaryPhone, website  } = memberData.contactDetails;
+        if (secondaryPhone)
+          existingMember.contactDetails.secondaryPhone = secondaryPhone;
+        if (website) existingMember.contactDetails.website = website;
+      }
 
-          const imagesMeta = await Uploads.processFiles(
-            files,
-            "members",
-            "img",
-            undefined,
-            ""
-          );
-          // console.log(imagesMeta, "imagesMeta");
-
-          if (imagesMeta) {
-            existingMember.personalDetails.profileImage = {
-              docName: imagesMeta[0].docName,
-              docPath: imagesMeta[0].docPath,
-              originalName: imagesMeta[0].originalName,
-            };
-          }
-        } catch (uploadError) {
-          console.error("Error processing profile image:", uploadError);
-          throw new BadRequestError("Failed to process profile image");
-        }
+      // Update nested businessAddress
+      if (memberData.businessAddress) {
+        const { addressLine1, addressLine2, city, state, postalCode } =
+          memberData.businessAddress;
+        if (addressLine1)
+          existingMember.businessAddress.addressLine1 = addressLine1;
+        if (addressLine2)
+          existingMember.businessAddress.addressLine2 = addressLine2;
+        if (city) existingMember.businessAddress.city = city;
+        if (state) existingMember.businessAddress.state = state;
+        if (postalCode) existingMember.businessAddress.postalCode = postalCode;
+      }
+      if (memberData.businessDetails) {
+        const { businessDescription, yearsInBusiness } =
+          memberData.businessDetails;
+        if (businessDescription)
+          existingMember.businessDetails.businessDescription =
+            businessDescription;
+        if (yearsInBusiness)
+          existingMember.businessDetails.yearsInBusiness = yearsInBusiness;
       }
 
       existingMember.updatedAt = new Date();
@@ -659,8 +636,7 @@ export default class MemberController {
           personalDetails: {
             firstName: updatedMember.personalDetails.firstName,
             lastName: updatedMember.personalDetails.lastName,
-            companyName: updatedMember.personalDetails.companyName,
-            profileImage: updatedMember.personalDetails.profileImage,
+            dob: updatedMember.personalDetails.dob,
           },
           businessAddress: {
             addressLine1: updatedMember.businessAddress.addressLine1,
@@ -668,6 +644,11 @@ export default class MemberController {
             city: updatedMember.businessAddress.city,
             state: updatedMember.businessAddress.state,
             postalCode: updatedMember.businessAddress.postalCode,
+          },
+          businessDetails: {
+            businessDescription:
+              updatedMember.businessDetails?.businessDescription,
+            yearsInBusiness: updatedMember.businessDetails?.yearsInBusiness,
           },
           contactDetails: {
             website: updatedMember.contactDetails.website,
@@ -687,7 +668,7 @@ export default class MemberController {
       }
       throw new InternalServerError(
         "Failed to update member: " +
-        (error instanceof Error ? error.message : JSON.stringify(error))
+          (error instanceof Error ? error.message : JSON.stringify(error))
       );
     }
   }
@@ -783,7 +764,9 @@ export default class MemberController {
     } = query;
 
     const skip = (page - 1) * limit;
-    const queryConditions: any[] = [{ $match: { isDelete: 0, isHeadtable: true } }];
+    const queryConditions: any[] = [
+      { $match: { isDelete: 0, isHeadtable: true } },
+    ];
 
     if (countryName) {
       queryConditions[0].$match["chapterInfo.countryName"] = new RegExp(
@@ -903,5 +886,4 @@ export default class MemberController {
       },
     });
   }
-
 }

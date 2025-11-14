@@ -34,50 +34,61 @@ import Payment from "../../models/payment.model";
 @JsonController("/api/admin/members")
 @UseBefore(AuthMiddleware)
 export default class MemberController {
+ 
   @Post("/")
   async createMember(
-    @Body({ validate: true }) memberData: CreateMemberDto,
+    @Body({ validate: { whitelist: true, forbidNonWhitelisted: false } })
+    memberData: CreateMemberDto,
     @Res() res: Response,
     @Req() req: Request
   ) {
-    // try {
-    // Trim string fields
-    if (memberData.chapterInfo?.countryName) {
-      memberData.chapterInfo.countryName =
-        memberData.chapterInfo.countryName.trim();
-    }
-    if (memberData.chapterInfo?.stateName) {
-      memberData.chapterInfo.stateName =
-        memberData.chapterInfo.stateName.trim();
-    }
+    try {
+      // Trim string fields
+      if (memberData.chapterInfo?.countryName) {
+        memberData.chapterInfo.countryName =
+          memberData.chapterInfo.countryName.trim();
+      }
+      if (memberData.chapterInfo?.stateName) {
+        memberData.chapterInfo.stateName =
+          memberData.chapterInfo.stateName.trim();
+      }
 
-    const member = new Member({
-      ...memberData,
-      status: "active",
-      isActive: memberData.isActive ?? 1,
-      isDelete: memberData.isDelete ?? 0,
-      createdBy: (req as any).user.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+      const member = new Member({
+        ...memberData,
+        status: "active",
+        isActive: memberData.isActive ?? 1,
+        isDelete: memberData.isDelete ?? 0,
+        createdBy: (req as any).user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
-    const savedMember = await member.save();
-    return res.status(201).json({
-      success: true,
-      message: "Member created successfully",
-      data: savedMember,
-    });
-    // } catch (error: unknown) {
-    //   console.error("Error creating member:", error);
-    //   if ((error as any).code === 11000) {
-    //     throw new BadRequestError(
-    //       "Member with this mobile number already exists"
-    //     );
-    //   }
-    //   throw new InternalServerError("Failed to create member");
-    // }
+      const savedMember = await member.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Member created successfully",
+        data: savedMember,
+      });
+    } catch (error: unknown) {
+      console.error("Error creating member:", error);
+
+      // Handle duplicate mobile number
+      if ((error as any).code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Member with this mobile number already exists",
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create member",
+      });
+    }
   }
 
+  
   @Post("/by-chapter")
   async createMemberByChapter(
     @Body({ validate: true }) memberData: CreateMemberbychapterDto,
@@ -234,7 +245,10 @@ export default class MemberController {
       } = query;
 
       const skip = (page - 1) * limit;
-      const queryConditions: any = { isDelete: 0, status: { $in: ["pending", "decline"] } };
+      const queryConditions: any = {
+        isDelete: 0,
+        status: { $in: ["pending", "decline"] },
+      };
 
       if (countryName) {
         queryConditions["chapterInfo.countryName"] = new RegExp(
@@ -285,8 +299,9 @@ export default class MemberController {
       const formattedMembers = members.map((member) => ({
         ...member,
         id: member._id,
-        name: `${member.personalDetails?.firstName || ""} ${member.personalDetails?.lastName || ""
-          }`.trim(),
+        name: `${member.personalDetails?.firstName || ""} ${
+          member.personalDetails?.lastName || ""
+        }`.trim(),
       }));
 
       return res.status(200).json({
@@ -415,7 +430,8 @@ export default class MemberController {
   @Put("/:id")
   async updateMember(
     @Param("id") id: string,
-    @Body({ validate: false }) memberData: any, // disable DTO validation
+    @Body({ validate: { whitelist: true, forbidNonWhitelisted: false } })
+    memberData: UpdateMemberDto,
     @Res() res: Response,
     @Req() req: Request
   ) {
@@ -425,23 +441,31 @@ export default class MemberController {
         throw new NotFoundError("Member not found");
       }
 
-      // ✅ Safely handle pins without strict validation
+      // ✅ Handle pins safely (objects with _id, name, image)
       if (Array.isArray(memberData.personalDetails?.pins)) {
-        // Convert incoming string IDs → ObjectIds safely
-        const incomingPins = memberData.personalDetails.pins.map(
-          (pin: string | mongoose.Types.ObjectId) =>
-            new mongoose.Types.ObjectId(pin)
-        );
+        const validPins = memberData.personalDetails.pins
+          .filter((p) => p && typeof p._id === "string" && p._id.trim() !== "")
+          .map((p) => ({
+            _id: new mongoose.Types.ObjectId(p._id),
+            name: p.name || "",
+            image: p.image || null,
+          }));
 
-        // 🔥 Allow same pins for other members — just replace, not merge
-        existingMember.personalDetails.pins = incomingPins;
+        // Assign safely to nested field
+        if (!existingMember.personalDetails) {
+          existingMember.personalDetails = {} as any;
+        }
+
+        existingMember.personalDetails.pins = validPins as any;
       }
+
+      // ✅ Merge rest of the updatable fields
+      Object.assign(existingMember, memberData);
 
       // 🕒 Update metadata
       existingMember.updatedAt = new Date();
       existingMember.updatedBy = (req as any).user?.id || null;
 
-      // ✅ Save and return
       const updatedMember = await existingMember.save();
 
       return res.status(200).json({
@@ -539,6 +563,7 @@ export default class MemberController {
       });
     }
   }
+
   @Get("/by-chapter/:chapterId")
   async getMembersByChapterId(
     @QueryParams() query: ListMembersDto,
@@ -620,7 +645,6 @@ export default class MemberController {
     }
   }
 
-
   @Get("/by-meeting/:MeetingId")
   async getMembersByMeetingId(
     @Param("MeetingId") MeetingId: string,
@@ -643,12 +667,12 @@ export default class MemberController {
     };
 
     if (search) {
-      const searchRegex = new RegExp(search, 'i');
+      const searchRegex = new RegExp(search, "i");
       match.$or = [
-        { 'personalDetails.firstName': searchRegex },
-        { 'personalDetails.lastName': searchRegex },
-        { 'personalDetails.email': searchRegex },
-        { 'personalDetails.mobileNumber': searchRegex },
+        { "personalDetails.firstName": searchRegex },
+        { "personalDetails.lastName": searchRegex },
+        { "personalDetails.email": searchRegex },
+        { "personalDetails.mobileNumber": searchRegex },
       ];
     }
 
@@ -659,34 +683,34 @@ export default class MemberController {
           from: "chapters",
           localField: "chapterInfo.chapterId",
           foreignField: "_id",
-          as: "chapter"
-        }
+          as: "chapter",
+        },
       },
       {
         $unwind: {
           path: "$chapter",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "zones",
           localField: "chapterInfo.zoneId",
           foreignField: "_id",
-          as: "zone"
-        }
+          as: "zone",
+        },
       },
       {
         $unwind: {
           path: "$zone",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "attendances",
           let: {
-            memberId: "$_id"
+            memberId: "$_id",
           },
           pipeline: [
             {
@@ -694,37 +718,34 @@ export default class MemberController {
                 $expr: {
                   $and: [
                     {
-                      $eq: ["$memberId", "$$memberId"]
+                      $eq: ["$memberId", "$$memberId"],
                     },
                     {
-                      $eq: ["$meetingId", meeting._id]
+                      $eq: ["$meetingId", meeting._id],
                     },
                     {
-                      $eq: ["$isDelete", 0]
-                    }
-                  ]
-                }
-              }
+                      $eq: ["$isDelete", 0],
+                    },
+                  ],
+                },
+              },
             },
             {
               $project: {
                 status: 1,
-                _id: 0
-              }
-            }
+                _id: 0,
+              },
+            },
           ],
-          as: "attendanceInfo"
-        }
+          as: "attendanceInfo",
+        },
       },
       {
         $addFields: {
           attendanceStatus: {
-            $arrayElemAt: [
-              "$attendanceInfo.status",
-              0
-            ]
-          }
-        }
+            $arrayElemAt: ["$attendanceInfo.status", 0],
+          },
+        },
       },
       {
         $project: {
@@ -732,20 +753,23 @@ export default class MemberController {
             $concat: [
               "$personalDetails.firstName",
               " ",
-              "$personalDetails.lastName"
-            ]
+              "$personalDetails.lastName",
+            ],
           },
           meetingName: meeting.topic,
           chapterName: "$chapter.chapterName",
           mobileNumber: "$contactDetails.mobileNumber",
           companyName: "$personalDetails.companyName",
           categoryRepresented: "$personalDetails.categoryRepresented",
-          status: "$attendanceStatus"
-        }
-      }
+          status: "$attendanceStatus",
+        },
+      },
     ];
 
-    const countResult = await Member.aggregate([...pipeline, { $count: "total" }]);
+    const countResult = await Member.aggregate([
+      ...pipeline,
+      { $count: "total" },
+    ]);
     const total = countResult?.[0]?.total || 0;
     const totalPages = Math.ceil(total / limit);
 

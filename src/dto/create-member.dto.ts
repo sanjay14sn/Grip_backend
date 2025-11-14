@@ -51,6 +51,18 @@ class ChapterInfoDto {
   howDidYouHearAboutGRIP?: string;
 }
 
+class PinObjectDto {
+  @IsMongoId()
+  _id!: string;
+
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsOptional()
+  image?: any;
+}
+
 class PersonalDetailsDto {
   @IsString()
   @IsNotEmpty({ message: "First name is required" })
@@ -95,8 +107,9 @@ class PersonalDetailsDto {
 
   @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true })
-  pins?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => PinObjectDto)
+  pins?: PinObjectDto[];
 }
 
 class BusinessAddressDto {
@@ -292,6 +305,11 @@ export class UpdateMemberDto {
 
   @IsOptional()
   type?: string = "member";
+
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  pins?: string[];
 }
 
 export class UpdateProfileMemberDto {

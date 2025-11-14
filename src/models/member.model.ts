@@ -175,11 +175,13 @@ const memberSchema = new Schema<IMember>(
       otherNetworkingOrgs: { type: String },
       isOtherNetworkingOrgs: { type: Boolean, required: true },
       education: { type: String },
-      pins: {
-        type: [{ type: Schema.Types.ObjectId, ref: "Pin" }],
-        required: false,
-        default: [],
-      },
+      pins: [
+        {
+          _id: { type: mongoose.Schema.Types.ObjectId, ref: "Pin" },
+          name: String,
+          image: String,
+        },
+      ],
     },
 
     // Business Address
