@@ -415,4 +415,47 @@ export default class ChapterController {
             });
         }
     }
+
+    // Public version (skips token validation)
+    @Get("/by-zone/public/:zoneId")
+    async getChaptersByZonePublic(
+        @Param("zoneId") zoneId: string,
+        @Res() res: Response
+    ) {
+        try {
+            const zone = await Zone.findById(zoneId);
+            if (!zone) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Zone not found"
+                });
+            }
+
+            const chapters = await Chapter.find({
+                zoneId: zoneId,
+                isDelete: 0
+            })
+                .populate("cidId", "name email phoneNumber")
+                .sort({ chapterName: 1 });
+
+            return res.status(200).json({
+                success: true,
+                message: "Chapters fetched successfully (public)",
+                data: chapters,
+                zoneInfo: {
+                    zoneId: zone._id,
+                    zoneName: zone.zoneName,
+                    countryName: zone.countryName,
+                    stateName: zone.stateName
+                }
+            });
+        } catch (error: unknown) {
+            console.error("Error fetching chapters by zone (public):", error);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch chapters by zone (public)",
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+        }
+    }
 }

@@ -26,18 +26,34 @@ import { Member } from "../../models/member.model";
 @UseBefore(AuthMiddleware)
 export default class VisitorController {
     @Post('/')
-    async createVisitor(@Body({ validate: true }) createDto: CreateVisitorDto, @Res() res: Response, @Req() req: Request) {
+    async createVisitor(
+        @Body({ validate: true }) createDto: CreateVisitorDto,
+        @Res() res: Response,
+        @Req() req: Request
+    ) {
         try {
             const visitor = new Visitor({
                 ...createDto,
-                invitedBy: (req as any).user.id,
-                createdBy: (req as any).user.id,
+
+                // Default metadata
+                isActive: 1,
+                isDelete: 0,
+                status: 'approve',
                 createdAt: new Date(),
                 updatedAt: new Date(),
+                createdBy: (req as any)?.user?.id || null,
+                invitedBy: (req as any)?.user?.id || null,
             });
+
             const savedVisitor = await visitor.save();
-            return res.status(201).json({ success: true, message: 'Visitor created successfully', data: savedVisitor });
+
+            return res.status(201).json({
+                success: true,
+                message: 'Visitor created successfully',
+                data: savedVisitor,
+            });
         } catch (error) {
+            console.error('Error creating visitor:', error);
             throw new InternalServerError('Failed to create Visitor record');
         }
     }
