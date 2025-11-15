@@ -101,7 +101,12 @@ const initServer = async (): Promise<void> => {
       controllers,
       middlewares,
       defaultErrorHandler: true,
-      validation: true,
+      classTransformer: true,
+      validation: {
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        validationError: { target: false },
+      },
     });
     console.log("✅ routing-controllers setup completed");
 
