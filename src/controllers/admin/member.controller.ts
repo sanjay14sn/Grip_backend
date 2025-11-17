@@ -30,6 +30,11 @@ import { Member } from "../../models/member.model";
 import mongoose, { Types } from "mongoose";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import Payment from "../../models/payment.model";
+import { Attendance } from "../../models/attendance.model";
+import { OneToOne } from "../../models/onetoone.model";
+import { ReferralSlipModel } from "../../models/referralslip.model";
+import ThankYouSlip from "../../models/thankyouslip.model";
+
 
 @JsonController("/api/admin/members")
 @UseBefore(AuthMiddleware)
@@ -792,6 +797,54 @@ export default class MemberController {
     });
   }
 
+  @Post("/meetings-attendance-count")
+  async getMembersAttendanceCount(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({ success: false, message: "memberIds are required" });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      const counts = await Attendance.aggregate([
+        { $match: { memberId: { $in: objIds }, isDelete: 0 } },
+        {
+          $group: {
+            _id: "$memberId",
+            totalMeetings: { $sum: 1 },
+            present: { $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] } },
+            absent: { $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] } },
+            late: { $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] } },
+            managed: { $sum: { $cond: [{ $eq: ["$status", "medical"] }, 1, 0] } },
+            substitute: { $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] } }
+          }
+        }
+      ]);
+ 
+      const countsMap: Record<string, any> = {};
+      counts.forEach(c => {
+        countsMap[c._id.toString()] = c;
+      });
+
+      // Default 0 for members with no attendance records
+      memberIds.forEach(id => {
+        if (!countsMap[id]) {
+          countsMap[id] = { totalMeetings: 0, present: 0, absent: 0, late: 0, managed: 0, substitute: 0 };
+        }
+      });
+
+      return res.status(200).json({ success: true, data: countsMap });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Failed to fetch attendance counts" });
+    }
+  }
+
   @Patch("/status/:id")
   async updateStatus(
     @Param("id") id: string,
@@ -875,6 +928,142 @@ export default class MemberController {
       });
     }
   }
+
+  @Post("/one-to-one-count")
+  async getOneToOneCountForMembers(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({ success: false, message: "memberIds are required" });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // Aggregate counts
+      const counts = await OneToOne.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } }
+            ]
+          }
+        },
+        {
+          $facet: {
+            fromCounts: [
+              { $match: { fromMember: { $in: objIds } } },
+              { $group: { _id: "$fromMember", count: { $sum: 1 } } }
+            ],
+            toCounts: [
+              { $match: { toMember: { $in: objIds } } },
+              { $group: { _id: "$toMember", count: { $sum: 1 } } }
+            ]
+          }
+        }
+      ]);
+
+      // Convert to map for easy lookup
+      const countsMap: Record<string, { fromCount: number; toCount: number; total: number }> = {};
+      memberIds.forEach(id => {
+        countsMap[id] = { fromCount: 0, toCount: 0, total: 0 };
+      });
+
+      if (counts.length > 0) {
+        const { fromCounts, toCounts } = counts[0];
+
+        fromCounts.forEach((c:any)=> {
+          countsMap[c._id.toString()].fromCount = c.count;
+        });
+        toCounts.forEach((c:any) => {
+          countsMap[c._id.toString()].toCount = c.count;
+        });
+
+        // Compute total
+        memberIds.forEach(id => {
+          countsMap[id].total = countsMap[id].fromCount + countsMap[id].toCount;
+        });
+      }
+
+      return res.status(200).json({ success: true, data: countsMap });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Failed to fetch one-to-one counts" });
+    }
+  }
+
+  @Post("/referral-count")
+  async getReferralCountsByMembers(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({ success: false, message: "memberIds are required" });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // Aggregate counts for given members
+      const counts = await ReferralSlipModel.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            givenArr: { $push: "$fromMember" },
+            receivedArr: { $push: "$toMember" }
+          }
+        }
+      ]);
+
+      // Initialize map with zero counts
+      const referralMap: Record<string, { given: number; received: number }> = {};
+      memberIds.forEach(id => {
+        referralMap[id] = { given: 0, received: 0 };
+      });
+
+      if (counts.length > 0) {
+        const givenArr: string[] = counts[0].givenArr.map((id: any) => id.toString());
+        const receivedArr: string[] = counts[0].receivedArr.map((id: any) => id.toString());
+
+        givenArr.forEach(id => {
+          if (referralMap[id]) referralMap[id].given += 1;
+        });
+
+        receivedArr.forEach(id => {
+          if (referralMap[id]) referralMap[id].received += 1;
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: referralMap
+      });
+
+    } catch (error) {
+      console.error("Error fetching referral counts:", error);
+      return res.status(500).json({ success: false, message: "Failed to fetch referral counts" });
+    }
+  }
+
+
+
 
   @Get("/cidbychapter/:chapterId")
   async getCidByChapterId(
