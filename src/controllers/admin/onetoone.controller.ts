@@ -309,9 +309,7 @@ export default class OneToOneController {
         @Param("id") id: string,
         @Res() res: Response
     ) {
-        try {
-            console.log(id,"DDDDDDD");
-            
+        try {            
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 return res.status(400).json({ success: false, message: "Invalid id" });
             }

@@ -157,7 +157,7 @@ export default class DashboardController {
                     ...statusFilter
                 }),
                 Visitor.countDocuments({
-                    createdBy: memberObjectId,
+                    invitedBy: memberObjectId,
                     isActive: 1,
                     isDelete: 0,
                     ...dateFilter,

@@ -53,4 +53,10 @@ export class CreateVisitorDto {
   @IsString()
   @IsOptional()
   chapter_directory_name?: string;
+
+  // ⭐ NEW ⭐ (Needed for proper visitor creation)
+  @IsString()
+  @IsOptional()
+  invitedBy?: string;
 }
+

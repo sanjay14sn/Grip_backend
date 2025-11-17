@@ -25,7 +25,7 @@ import { AuthMiddleware } from '../../middleware/AuthorizationMiddleware';
 @UseBefore(AuthMiddleware)
 export default class VisitorController {
 
-
+ 
 
     @Get('/list')
     async listVisitors(@QueryParams() queryParams: ListVisitorDto, @Res() res: Response, @Req() req: Request) {
@@ -206,6 +206,14 @@ export default class VisitorController {
                 address: record.address,
                 visitDate: record.visitDate,
                 status: record.status,
+                // NEW FIELDS ADDED HERE
+                chapter: record.chapter,
+                chapterId: record.chapterId,
+                chapter_directory_name: record.chapter_directory_name,
+                invited_by_member: record.invited_by_member,
+                invited_from: record.invited_from,
+                zone: record.zone,
+                zoneId: record.zoneId,
                 // invitedBy: record.invitedBy,
                 // Image: record.invitedBy.personalDetails?.profileImage || "",
                 invite: {
@@ -276,6 +284,43 @@ export default class VisitorController {
             return res.status(500).json({
                 success: false,
                 message: 'Failed to update status',
+            });
+        }
+    }
+
+    @Patch('/delete/:id')
+    async deleteVisitor(
+        @Param('id') id: string,
+        @Res() res: Response
+    ) {
+        try {
+            const visitorRecord = await Visitor.findById(id);
+
+            if (!visitorRecord) {
+                throw new NotFoundError('Visitor record not found');
+            }
+
+            // Soft delete
+            visitorRecord.isDelete = 1;
+            visitorRecord.deletedAt = new Date();
+
+            await visitorRecord.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Visitor deleted successfully',
+                data: visitorRecord,
+            });
+
+        } catch (error: unknown) {
+            console.error('Error deleting visitor:', error);
+            if (error instanceof NotFoundError) {
+                throw error;
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete visitor',
             });
         }
     }

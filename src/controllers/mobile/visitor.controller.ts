@@ -21,6 +21,7 @@ import { ListVisitorDto } from '../../dto/list-visitor.dto';
 import { FilterQuery } from 'mongoose';
 import { AuthMiddleware } from '../../middleware/AuthorizationMiddleware';
 import { Member } from "../../models/member.model";
+import { sendEmailWithEJS } from '../../services/EmailService';
 
 @JsonController('/api/mobile/visitors')
 @UseBefore(AuthMiddleware)
@@ -41,11 +42,32 @@ export default class VisitorController {
                 status: 'approve',
                 createdAt: new Date(),
                 updatedAt: new Date(),
+
+                // Who created the form (admin / logged-in user)
                 createdBy: (req as any)?.user?.id || null,
-                invitedBy: (req as any)?.user?.id || null,
+
+                // IMPORTANT: Who actually invited the visitor (member ID from frontend)
+                invitedBy: createDto.invitedBy || (req as any)?.user?.id||null,
             });
 
             const savedVisitor = await visitor.save();
+
+            // // 🔥 Trigger email after successful creation
+            // if (savedVisitor.email) {
+            //     await sendEmailWithEJS(
+            //         savedVisitor.email,
+            //         'Visitor Registration Successful',
+            //         {
+            //             name: savedVisitor.name,
+            //             category: savedVisitor.category,
+            //             company: savedVisitor.company,
+            //             mobile: savedVisitor.mobile,
+            //             invitedBy: savedVisitor.invitedBy,
+            //             createdAt: savedVisitor.createdAt,
+            //         }
+            //     );
+            // }
+
 
             return res.status(201).json({
                 success: true,
@@ -60,8 +82,12 @@ export default class VisitorController {
 
     @Get('/list')
     async listVisitors(@QueryParams() queryParams: ListVisitorDto, @Res() res: Response, @Req() req: Request) {
-        const { page = queryParams.page ?? 1, limit = queryParams.limit ?? 100, search, sortField = 'createdAt', sortOrder = 'desc', fromDate, toDate } = queryParams;
+        const page = Number(queryParams.page) || 1;
+        const limit = Number(queryParams.limit) || 100;
         const skip = (page - 1) * limit;
+
+        const { search, sortField = 'createdAt', sortOrder = 'desc', fromDate, toDate } = queryParams;
+
 
         const query: FilterQuery<IVisitor> = {
             isDelete: 0,
@@ -76,13 +102,21 @@ export default class VisitorController {
         }
 
         if (fromDate && toDate) {
+            const start = new Date(fromDate);
+            start.setHours(0, 0, 0, 0);
+
+            const end = new Date(toDate);
+            end.setDate(end.getDate() + 1);
+            end.setHours(0, 0, 0, 0);
+
             query.createdAt = {
-                $gte: fromDate,
-                $lte: toDate,
+                $gte: start,
+                $lt: end
             };
         }
 
         try {
+            console.log(query)
             const [records, total] = await Promise.all([
                 Visitor.aggregate([
                     { $match: query },
@@ -102,7 +136,7 @@ export default class VisitorController {
                     },
                     {
                         $unwind: {
-                            path: '$invitedBy',
+                            path:'$invitedBy',
                             preserveNullAndEmptyArrays: true
                         }
                     }
@@ -119,7 +153,7 @@ export default class VisitorController {
                     page,
                     limit,
                     totalPages: Math.ceil(total / limit),
-                },
+                }
             });
         } catch (error) {
             throw new InternalServerError('Failed to fetch Visitor records');
