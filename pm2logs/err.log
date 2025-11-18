@@ -385,3 +385,81 @@ Error: MongoDB connection string not defined
 Error: MongoDB connection string not defined
 Error: MongoDB connection string not defined
 Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error: MongoDB connection string not defined
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at new BadRequestError (F:\opti\Grip_backend\node_modules\src\http-error\BadRequestError.ts:10:5)
+    at F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:249:30
+    at async ActionParameterHandler.normalizeParamValue (F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:149:15)
+    at async Promise.all (index 0)
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at new BadRequestError (F:\opti\Grip_backend\node_modules\src\http-error\BadRequestError.ts:10:5)
+    at F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:249:30
+    at async ActionParameterHandler.normalizeParamValue (F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:149:15)
+    at async Promise.all (index 0)
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at new BadRequestError (F:\opti\Grip_backend\node_modules\src\http-error\BadRequestError.ts:10:5)
+    at F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:249:30
+    at async ActionParameterHandler.normalizeParamValue (F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:149:15)
+    at async Promise.all (index 0)
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at new BadRequestError (F:\opti\Grip_backend\node_modules\src\http-error\BadRequestError.ts:10:5)
+    at F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:249:30
+    at async ActionParameterHandler.normalizeParamValue (F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:149:15)
+    at async Promise.all (index 0)
+InternalServerError: stream is not readable
+    at readStream (F:\opti\Grip_backend\node_modules\raw-body\index.js:185:17)
+    at getRawBody (F:\opti\Grip_backend\node_modules\raw-body\index.js:116:12)
+    at read (F:\opti\Grip_backend\node_modules\body-parser\lib\read.js:79:3)
+    at jsonParser (F:\opti\Grip_backend\node_modules\body-parser\lib\types\json.js:138:5)
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at routeGuard (F:\opti\Grip_backend\node_modules\src\driver\express\ExpressDriver.ts:179:16)
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (F:\opti\Grip_backend\node_modules\router\lib\route.js:117:3)
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at new BadRequestError (F:\opti\Grip_backend\node_modules\src\http-error\BadRequestError.ts:10:5)
+    at F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:249:30
+    at async ActionParameterHandler.normalizeParamValue (F:\opti\Grip_backend\node_modules\src\ActionParameterHandler.ts:149:15)
+    at async Promise.all (index 0)
+[2025-11-11T08:55:11.780Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 13:50:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:11.789Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 13:55:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:11.795Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:00:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:11.801Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:05:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:11.805Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:10:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:11.811Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:15:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:12.156Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:20:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2025-11-11T08:55:12.170Z] [PID: 17132] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Tue Nov 11 2025 14:25:00 GMT+0530 (India Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at AuthMiddleware.use (F:\opti\Grip_backend\src\middleware\AuthorizationMiddleware.ts:20:13)
+    at F:\opti\Grip_backend\node_modules\src\driver\express\ExpressDriver.ts:399:92
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at routeGuard (F:\opti\Grip_backend\node_modules\src\driver\express\ExpressDriver.ts:179:16)
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (F:\opti\Grip_backend\node_modules\router\lib\route.js:117:3)
+    at handle (F:\opti\Grip_backend\node_modules\router\index.js:435:11)
+Error
+    at new HttpError (F:\opti\Grip_backend\node_modules\src\http-error\HttpError.ts:16:18)
+    at AuthMiddleware.use (F:\opti\Grip_backend\src\middleware\AuthorizationMiddleware.ts:20:13)
+    at F:\opti\Grip_backend\node_modules\src\driver\express\ExpressDriver.ts:399:92
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at routeGuard (F:\opti\Grip_backend\node_modules\src\driver\express\ExpressDriver.ts:179:16)
+    at Layer.handleRequest (F:\opti\Grip_backend\node_modules\router\lib\layer.js:152:17)
+    at next (F:\opti\Grip_backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (F:\opti\Grip_backend\node_modules\router\lib\route.js:117:3)
+    at handle (F:\opti\Grip_backend\node_modules\router\index.js:435:11)

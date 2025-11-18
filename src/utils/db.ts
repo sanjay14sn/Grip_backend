@@ -18,7 +18,7 @@ dotenv.config();
 // }
 
 // Build MongoDB URI (include credentials if provided)
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGO_URI;
 
 if (!MONGODB_URI) {
   console.error('Error: MongoDB connection string not defined');

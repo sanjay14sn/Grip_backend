@@ -1,0 +1,1822 @@
+🧩 Loading environment variables...
+✅ .env loaded successfully
+🔑 Environment Variables Summary:
+{
+  NODE_ENV: 'development',
+  PORT: '4002',
+  MONGO_URI: '✅ Loaded',
+  JWT_SECRET: '✅ Loaded'
+}
+🚀 Initializing server...
+📦 Loading controllers...
+src/controllers/mobile: [AttendanceController]
+src/controllers/mobile: [AuthController]
+src/controllers/mobile: [ChapterController]
+src/controllers/mobile: [DashboardController]
+src/controllers/mobile: [MemberController]
+src/controllers/mobile: [NotificationController]
+src/controllers/mobile: [OneToOneController]
+src/controllers/mobile: [PaymentController]
+src/controllers/mobile: [ReferralSlipController]
+src/controllers/mobile: [TestimonialSlipController]
+src/controllers/mobile: [ThankYouSlipController]
+src/controllers/mobile: [TransactionController]
+src/controllers/mobile: [UserController]
+src/controllers/mobile: [VisitorController]
+src/controllers/mobile: [ZoneController]
+src/controllers/admin: [AttendanceController]
+src/controllers/admin: [AuthController]
+src/controllers/admin: [ChapterController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [DashboardController]
+src/controllers/admin: [HeadTableController]
+src/controllers/admin: [MemberController]
+src/controllers/admin: [OneToOneController]
+src/controllers/admin: [PaymentController]
+src/controllers/admin: [PermissionController]
+src/controllers/admin: [ReferralSlipController]
+src/controllers/admin: [RoleController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [TestimonialSlipController]
+src/controllers/admin: [ThankYouSlipController]
+src/controllers/admin: [UserController]
+src/controllers/admin: [VisitorController]
+src/controllers/admin: [ZoneController]
+✅ Loaded 33 controllers
+⚙️ Loading middlewares...
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+✅ Loaded 3 middlewares
+💓 Registering root health check endpoint...
+🧰 Setting up global middlewares...
+✅ File upload middleware enabled
+✅ CORS middleware enabled
+✅ JSON parser enabled
+📂 Serving static files from: F:\opti\Grip_backend\public
+🧩 Registering routing-controllers...
+✅ routing-controllers setup completed
+🧠 Connecting to MongoDB...
+MongoDB connection established successfully.
+Connected to MongoDB at mongodb+srv://venkat_db_user:gkvOYrsmSijlT8IH@cluster0.nmftukw.mongodb.net/grip_live
+✅ Database connection established
+✅ Server initialization complete
+🚀 Server running at http://localhost:4002
+🔌 Socket.IO initialised
+📡 Socket service initialized
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:05:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:10:00 pm
+🔍 Checking MongoDB connection status...
+✅ Database ping successful
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:15:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:20:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:25:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:30:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:35:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:40:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:45:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 9/11/2025, 8:50:00 pm
+MongoDB connection established successfully.
+Connected to MongoDB at mongodb+srv://venkat_db_user:gkvOYrsmSijlT8IH@cluster0.nmftukw.mongodb.net/grip_live
+🚀 Server running on http://localhost:4002
+🔌 Socket.IO initialised
+📡 Socket service initialized
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 1:35:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 1:40:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 1:45:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:30:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:35:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:40:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Entered processFiles
+File saved successfully: public\pins\img-1762852346425.png
+File uploaded: img-1762852346425.png
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:45:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:50:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 2:55:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:00:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:05:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:10:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:15:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:20:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager ",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.food.com",
+    "gstNumber": "U76543666"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Associate "
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:25:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:30:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager ",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.food.com",
+    "gstNumber": "U76543666"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Associate "
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:35:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:40:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:45:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:50:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 3:55:00 pm
+Received body: LoginUserDto { mobileNumber: '9988776655', pin: '2025' }
+Type of mobileNumber: string
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "role": "689991ed714d58c88c9ac487",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.priyaenterprises.com",
+    "gstNumber": "GST998877AA"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Partner"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:00:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:05:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.priyaenterprises.com",
+    "gstNumber": "GST998877AA"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Partner"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:10:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:15:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:20:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:25:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:30:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "role": "689991ed714d58c88c9ac487",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.priyaenterprises.com",
+    "gstNumber": "GST998877AA"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Partner"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:35:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:40:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": false,
+  "status": "active",
+  "type": "member",
+  "role": "689991ed714d58c88c9ac487",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Riya",
+    "howDidYouHearAboutGRIP": "WhatsApp"
+  },
+  "personalDetails": {
+    "firstName": "Priya",
+    "lastName": "V",
+    "companyName": "Pri",
+    "industry": "IT",
+    "categoryRepresented": "Manager",
+    "dob": "1990-09-15T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "Test",
+    "isOtherNetworkingOrgs": true,
+    "education": "Professional Degree"
+  },
+  "businessAddress": {
+    "addressLine1": "Test",
+    "addressLine2": "frg",
+    "state": "TG",
+    "city": "Hyderabad",
+    "postalCode": "500042"
+  },
+  "businessDetails": {
+    "businessDescription": "test",
+    "yearsInBusiness": "11_15_years"
+  },
+  "contactDetails": {
+    "email": "test@gmail.com",
+    "mobileNumber": "9999999999",
+    "secondaryPhone": "8889997778",
+    "website": "www.priyaenterprises.com",
+    "gstNumber": "GST998877AA"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Pravin",
+      "lastName": "S",
+      "businessName": "NNY",
+      "phoneNumber": "7798889999",
+      "relationship": "Partner"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:45:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:50:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 4:55:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:00:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:05:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:10:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:15:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:20:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:25:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:30:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:35:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:40:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:45:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:50:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 5:55:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 6:00:00 pm
+Running absent marking cron job...
+✅ Absent cron job is running at 11/11/2025, 6:05:00 pm
+🟡 Incoming Update Request Body: {
+  "isActive": 1,
+  "isDelete": 0,
+  "isHeadtable": true,
+  "status": "active",
+  "type": "test",
+  "chapterInfo": {
+    "countryName": "India",
+    "stateName": "TN",
+    "zoneId": "6879f112a8e3029bf381c16f",
+    "chapterId": "686237892f2f096747acd14a",
+    "CIDId": [
+      "6879fcb460ef1e65cb84e536"
+    ],
+    "whoInvitedYou": "Mugesh",
+    "howDidYouHearAboutGRIP": "Online"
+  },
+  "personalDetails": {
+    "firstName": "Pravin",
+    "lastName": "S",
+    "companyName": "Pravin Enterprises",
+    "industry": "IT ",
+    "categoryRepresented": "Web Development",
+    "dob": "2025-07-31T00:00:00.000Z",
+    "previouslyGRIPMember": true,
+    "otherNetworkingOrgs": "",
+    "isOtherNetworkingOrgs": false,
+    "education": "Bachelor"
+  },
+  "businessAddress": {
+    "addressLine1": "12/13 Ragavendra street Athur Salem",
+    "addressLine2": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "city": "Chennai",
+    "postalCode": "635806"
+  },
+  "contactDetails": {
+    "email": "pravin@gmail.com",
+    "mobileNumber": "9890989098",
+    "secondaryPhone": "9900889988",
+    "website": "www.pravinenterprise.com",
+    "gstNumber": "AA73455DD"
+  },
+  "businessDetails": {
+    "businessDescription": "Web development is the process of building, creating, and maintaining websites or web applications. It involves both the frontend (client-side)—what users interact with—and the backend (server-side)—which manages data and logic behind the scenes.",
+    "yearsInBusiness": "6_10_years"
+  },
+  "businessReferences": [
+    {
+      "contactSharingGRIP": true,
+      "contactSharingGRIPReferences": true,
+      "firstName": "Ajay ",
+      "lastName": "S",
+      "businessName": "Ajay Pvt Ltd",
+      "phoneNumber": "8789878987",
+      "relationship": "Mentor"
+    }
+  ],
+  "termsAndCertifications": {
+    "willAttendMeetingsOnTime": true,
+    "willBringVisitors": true,
+    "willDisplayPositiveAttitude": true,
+    "understandsContributorsWin": true,
+    "willAbideByPolicies": true,
+    "willContributeBestAbility": true
+  },
+  "role": "689991ed714d58c88c9ac487"
+}
