@@ -58,6 +58,7 @@ export interface IMember extends Document {
     industry?: string;
     categoryRepresented?: string;
     dob?: Date;
+    renewalDate?: Date;
     previouslyGRIPMember?: boolean;
     otherNetworkingOrgs?: string;
     isOtherNetworkingOrgs?: boolean;
@@ -182,6 +183,7 @@ const memberSchema = new Schema<IMember>(
           image: String,
         },
       ],
+      renewalDate: { type: Date }
     },
 
     // Business Address

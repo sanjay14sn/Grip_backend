@@ -11,6 +11,7 @@ export interface IChapter extends Document {
     chapterCreatedDate: Date;
     meetingDayAndTime?: Date;
     meetingType: 'Online' | 'In Person' | 'Hybrid';
+    weekday: string; // <-- add this
     isActive?: number;
     isDelete?: number;
     createdAt: Date;
@@ -64,6 +65,14 @@ const chapterSchema = new Schema<IChapter>({
         required: true,
         enum: ['Online', 'In Person', 'Hybrid']
     },
+
+    // ⭐ NEW FIELD
+    weekday: {
+        type: String,
+        required: true,
+        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    },
+
     isActive: {
         type: Number,
         default: 1

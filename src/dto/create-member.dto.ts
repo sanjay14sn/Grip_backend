@@ -89,6 +89,11 @@ class PersonalDetailsDto {
   @IsOptional()
   dob?: Date;
 
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  renewalDate?: Date;
+
   @IsBoolean()
   @IsNotEmpty({ message: "Previously GRIP member is required" })
   previouslyGRIPMember?: boolean;

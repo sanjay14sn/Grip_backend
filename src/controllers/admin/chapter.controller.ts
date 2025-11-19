@@ -843,15 +843,17 @@ export default class ChapterController {
     @Patch('/:id/status')
     async updateChapterStatus(
         @Param('id') id: string,
-        @Body() statusData: { isActive: number },
+        @Body() statusData: { isActive: number, weekday:string},
         @Res() res: Response
     ) {
         try {
+            console.log(statusData,"status")
             const updatedChapter = await Chapter.findOneAndUpdate(
                 { _id: id, isDelete: 0 },
                 {
                     $set: {
                         isActive: statusData.isActive,
+                        weekday: statusData.weekday,
                         updatedAt: new Date()
                     }
                 },

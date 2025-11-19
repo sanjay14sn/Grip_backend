@@ -60,6 +60,8 @@ export default class MemberController {
           memberData.chapterInfo.stateName.trim();
       }
 
+      console.log(memberData?.personalDetails?.renewalDate,"rrrrrrrrr")
+
       const member = new Member({
         ...memberData,
         status: "active",

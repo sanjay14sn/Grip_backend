@@ -26,7 +26,6 @@ export class CreateChapterDto {
     @IsMongoId()
     zoneId!: string;
 
-
     @IsArray()
     cidId!: string[];
 
@@ -48,4 +47,12 @@ export class CreateChapterDto {
 
     @IsEnum(MeetingType)
     meetingType!: MeetingType;
+
+    @IsString()
+    @IsNotEmpty({ message: "Weekday is required" })
+    @IsEnum(
+        ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        { message: "Weekday must be a valid day of the week" }
+    )
+    weekday!: string;
 }
