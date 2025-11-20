@@ -20,6 +20,8 @@ import { CreateReferralSlipDto } from "../../dto/create-referralslip.dto";
 import { ListReferralSlipDto } from "../../dto/list-referralslip.dto";
 import { ReferralSlipModel } from "../../models/referralslip.model";
 import NotificationController from "./notification.controller";
+import { Member } from "../../models/member.model";
+import nodemailer from "nodemailer";
 
 @JsonController("/api/mobile/referralslip")
 @UseBefore(AuthMiddleware)
@@ -41,27 +43,87 @@ export default class ReferralSlipController {
     try {
       const saved = await referralSlip.save();
 
-      // Create notification
-      const fromMemberId = (req as any).user.id;
-      if (createDto.toMember.toString() !== fromMemberId.toString()) {
+      // step -1
+      // 2️⃣ Fetch member details for email
+      const toMember = await Member.findById(createDto.toMember);
+      const fromMember = await Member.findById(userId);
+
+      if (!toMember) {
+        return res.status(404).json({
+          success: false,
+          message: "To Member not found",
+        });
+      }
+
+      // ---- MEMBER NAME & EMAIL FIX ----
+      const toMemberFullName = `${toMember.personalDetails.firstName} ${
+        toMember.personalDetails.lastName ?? ""
+      }`.trim();
+      const toMemberEmail = toMember.contactDetails.email;
+
+      const fromMemberFullName = `${fromMember?.personalDetails.firstName} ${
+        fromMember?.personalDetails.lastName ?? ""
+      }`.trim();
+
+      // 3️⃣ Prepare email content
+      const mailMessage = `
+Hello ${toMemberFullName},
+
+You have received a new referral from ${fromMemberFullName}.
+
+Referral Details:
+------------------------------------
+Name      : ${createDto.referalDetail.name}
+Mobile    : ${createDto.referalDetail.mobileNumber}
+Address   : ${createDto.referalDetail.address}
+Comments  : ${createDto.referalDetail.comments}
+
+Referral Status: ${createDto.referalStatus}
+
+Regards,
+GripForum System
+`;
+
+      // 4️⃣ Nodemailer Transporter
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "marishalagiri@gmail.com",
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
+
+      // 5️⃣ Send Email
+      await transporter.sendMail({
+        from: `"Grip Forum" <marishalagiri@gmail.com>`,
+        to: toMemberEmail,
+        subject: "You Received a New Referral",
+        text: mailMessage,
+      });
+
+      // 6️⃣ Create Notification (your existing logic)
+      if (createDto.toMember.toString() !== userId.toString()) {
         await NotificationController.createNotification(
           "referral",
           createDto.toMember,
-          fromMemberId,
+          userId,
           saved._id,
           "referralslips"
         );
       }
 
-      return res
-        .status(201)
-        .json({
-          success: true,
-          message: "ReferralSlip created successfully",
-          data: saved,
-        });
+      return res.status(201).json({
+        success: true,
+        message: "ReferralSlip created successfully",
+        data: saved,
+      });
     } catch (error) {
-      throw new InternalServerError("Failed to create ReferralSlip");
+      console.error("REFERRAL CREATION ERROR:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Email sending error",
+        error: error,
+      });
     }
   }
 
