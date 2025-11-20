@@ -25,7 +25,7 @@ export interface IReferralSlip extends Document {
 
 const ReferralDetailSchema = new Schema<IReferralDetail>({
     name: { type: String, required: true },
-    category: { type: String, required: true },
+    // category: { type: String, required: true },
     mobileNumber: { type: String, required: true },
     comments: { type: String },
     address: { type: String },
