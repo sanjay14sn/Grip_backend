@@ -21,6 +21,7 @@ import { ListReferralSlipDto } from "../../dto/list-referralslip.dto";
 import { ReferralSlipModel } from "../../models/referralslip.model";
 import NotificationController from "./notification.controller";
 import { Member } from "../../models/member.model";
+import { ReferralStatusLog } from "../../models/referral-status-log.model"
 import nodemailer from "nodemailer";
 
 @JsonController("/api/mobile/referralslip")
@@ -185,10 +186,30 @@ GripForum System
           .lean(),
         ReferralSlipModel.countDocuments(query),
       ]);
+
+
+          // ⭐ Attach latest status log for each referral
+    const enrichedRecords = await Promise.all(
+      records.map(async (referral) => {
+        const latestStatusLog = await ReferralStatusLog.findOne({
+          referralId: referral._id,
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+
+        return {
+          ...referral,
+          latestStatus: latestStatusLog?.status || null, // Example: "Contacted"
+          statusLog: latestStatusLog || null,            // Full log object
+        };
+      })
+    );
+
+
       return res.status(200).json({
         success: true,
         message: "ReferralSlip received records fetched successfully",
-        data: records,
+        data: enrichedRecords,
         pagination: {
           total,
           page: +page,

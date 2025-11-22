@@ -20,6 +20,7 @@ import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { CreateThankYouSlipDto } from "../../dto/create-thankyouslip.dto";
 import ThankYouSlip, { IThankYouSlip } from "../../models/thankyouslip.model";
 import { Member } from "../../models/member.model";
+import { ReferralStatusLog } from "../../models/referral-status-log.model";
 import NotificationController from "./notification.controller";
 import { ListThankYouSlipDto } from "../../dto/list-thankyouslip.dto";
 import nodemailer from "nodemailer";
@@ -35,37 +36,45 @@ export default class ThankYouSlipController {
     @Req() req: Request
   ) {
     try {
+      const fromMemberId = (req as any).user.id;
+
+      // --------------------------------------------------
+      // 1️⃣ Validate Members
+      // --------------------------------------------------
       const toMember = await Member.findById(createDto.toMember);
+      const fromMember = await Member.findById(fromMemberId);
+
       if (!toMember) {
         throw new BadRequestError(
           "The specified recipient member does not exist."
         );
       }
 
+      if (!fromMember) {
+        throw new BadRequestError("Logged-in user not found.");
+      }
       const thankYouSlip = new ThankYouSlip({
         ...createDto,
-        fromMember: (req as any).user.id,
-        createdBy: (req as any).user.id,
+        fromMember: fromMemberId,
+        createdBy: fromMemberId,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
       const savedThankYouSlip = await thankYouSlip.save();
+      await ReferralStatusLog.findOneAndUpdate(
+        { referralId: createDto.referralId }, // match referralId
+        {
+          status: createDto.referralStatus, // Only update status
+          updatedAt: new Date(),
+        },
+        { new: true, upsert: true } // create if not exists
+      );
 
       // --------------------------------------------------
-      // SEND MAIL ONLY WHEN BUSINESS CLOSED
+      // 4️⃣ SEND MAIL IF BUSINESS CLOSED
       // --------------------------------------------------
       if (createDto.referralStatus === "Business Closed") {
-        const fromUser = await Member.findById((req as any).user.id);
-        const toUser = await Member.findById(createDto.toMember);
-
-        if (!fromUser) {
-          throw new BadRequestError("From Member not found.");
-        }
-        if (!toUser) {
-          throw new BadRequestError("To Member not found for mail.");
-        }
-
         const transporter = nodemailer.createTransport({
           service: "gmail",
           auth: {
@@ -75,7 +84,7 @@ export default class ThankYouSlipController {
         });
 
         const mailMessage = `
-Hello ${toUser.personalDetails.firstName},
+Hello ${toMember.personalDetails.firstName},
 
 A business you referred has been closed successfully.
 
@@ -90,14 +99,11 @@ Grip Forum
 
         await transporter.sendMail({
           from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
-          to: fromUser.contactDetails.email,
+          to: toMember.contactDetails.email, // ✔ correct receiver
           subject: "Business Closed Update",
           text: mailMessage,
         });
       }
-
-      // Notification (same as before)
-      const fromMemberId = (req as any).user.id;
       if (createDto.toMember.toString() !== fromMemberId.toString()) {
         await NotificationController.createNotification(
           "thankyou",
@@ -114,7 +120,10 @@ Grip Forum
         data: savedThankYouSlip,
       });
     } catch (error) {
+      console.error("THANK YOU SLIP ERROR:", error);
+
       if (error instanceof BadRequestError) throw error;
+
       throw new InternalServerError("Failed to create Thank You Slip record");
     }
   }
