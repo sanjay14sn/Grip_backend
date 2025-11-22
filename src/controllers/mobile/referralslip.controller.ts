@@ -218,10 +218,23 @@ GripForum System
     if (filters.toMember) query.toMember = filters.toMember;
     if (filters.fromMember) query.fromMember = filters.fromMember;
     if (filters.referalStatus) query.referalStatus = filters.referalStatus;
+    // if (fromDate && toDate) {
+    //   query.createdAt = {
+    //     $gte: fromDate,
+    //     $lte: toDate,
+    //   };
+    // }
+    // ✅ FIX: INCLUDE ENTIRE toDate DAY
     if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0); // 00:00:00
+
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999); // 23:59:59
+
       query.createdAt = {
-        $gte: fromDate,
-        $lte: toDate,
+        $gte: start,
+        $lte: end,
       };
     }
     try {
