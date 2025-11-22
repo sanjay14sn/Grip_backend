@@ -12,6 +12,7 @@ import { TestimonialSlip } from '../../models/testimonialslip.model';
 import ThankYouSlip from '../../models/thankyouslip.model';
 import { Visitor } from '../../models/visitor.model';
 import { OneToOne } from '../../models/onetoone.model';
+import { ExpectedVisitor } from '../../models/expectedvisitors.model';
 import { ReferralSlipModel } from '../../models/referralslip.model';
 import mongoose from 'mongoose';
 
@@ -69,110 +70,122 @@ export default class DashboardController {
             const memberObjectId = new mongoose.Types.ObjectId(memberId);
 
             const [
-                testimonialGivenCount,
-                referralGivenCount,
-                thankYouGivenAmountResult,
-                thankYouGivenCount,
-                testimonialReceivedCount,
-                referralReceivedCount,
-                thankYouReceivedAmountResult,
-                thankYouReceivedCount,
-                visitorCount,
-                oneToOneCount,
+              testimonialGivenCount,
+              referralGivenCount,
+              thankYouGivenAmountResult,
+              thankYouGivenCount,
+              testimonialReceivedCount,
+              referralReceivedCount,
+              thankYouReceivedAmountResult,
+              thankYouReceivedCount,
+              visitorCount,
+              expectedVisitorCount,
+              oneToOneCount,
             ] = await Promise.all([
-                TestimonialSlip.countDocuments({
+              TestimonialSlip.countDocuments({
+                fromMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              ReferralSlipModel.countDocuments({
+                fromMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              ThankYouSlip.aggregate([
+                {
+                  $match: {
                     fromMember: memberObjectId,
                     isActive: 1,
                     isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                ReferralSlipModel.countDocuments({
-                    fromMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                ThankYouSlip.aggregate([
-                    {
-                        $match: {
-                            fromMember: memberObjectId,
-                            isActive: 1,
-                            isDelete: 0,
-                            ...(startDate ? { createdAt: { $gte: startDate, $lte: endDate } } : {}),
-                            ...statusFilter
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            total: { $sum: "$amount" }
-                        }
-                    }
-                ]),
-                ThankYouSlip.countDocuments({
-                    fromMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                TestimonialSlip.countDocuments({
+                    ...(startDate
+                      ? { createdAt: { $gte: startDate, $lte: endDate } }
+                      : {}),
+                    ...statusFilter,
+                  },
+                },
+                {
+                  $group: {
+                    _id: null,
+                    total: { $sum: "$amount" },
+                  },
+                },
+              ]),
+              ThankYouSlip.countDocuments({
+                fromMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              TestimonialSlip.countDocuments({
+                toMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              ReferralSlipModel.countDocuments({
+                toMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              ThankYouSlip.aggregate([
+                {
+                  $match: {
                     toMember: memberObjectId,
                     isActive: 1,
                     isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                ReferralSlipModel.countDocuments({
-                    toMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                ThankYouSlip.aggregate([
-                    {
-                        $match: {
-                            toMember: memberObjectId,
-                            isActive: 1,
-                            isDelete: 0,
-                            ...(startDate ? { createdAt: { $gte: startDate, $lte: endDate } } : {}),
-                            ...statusFilter
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            total: { $sum: "$amount" }
-                        }
-                    }
-                ]),
-                ThankYouSlip.countDocuments({
-                    fromMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                Visitor.countDocuments({
-                    invitedBy: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
-                OneToOne.countDocuments({
-                    $or: [
-                        { fromMember: memberObjectId },
-                        { toMember: memberObjectId }
-                    ],
-                    isActive: 1,
-                    isDelete: 0,
-                    ...dateFilter,
-                    ...statusFilter
-                }),
+                    ...(startDate
+                      ? { createdAt: { $gte: startDate, $lte: endDate } }
+                      : {}),
+                    ...statusFilter,
+                  },
+                },
+                {
+                  $group: {
+                    _id: null,
+                    total: { $sum: "$amount" },
+                  },
+                },
+              ]),
+              ThankYouSlip.countDocuments({
+                fromMember: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              Visitor.countDocuments({
+                invitedBy: memberObjectId,
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              ExpectedVisitor.countDocuments({
+                invitedBy: memberObjectId,
+                isActive: 1,
+                isDelete: 0, // ONLY ACTIVE VISITORS COUNTED
+                ...dateFilter,
+                ...statusFilter,
+              }),
+              OneToOne.countDocuments({
+                $or: [
+                  { fromMember: memberObjectId },
+                  { toMember: memberObjectId },
+                ],
+                isActive: 1,
+                isDelete: 0,
+                ...dateFilter,
+                ...statusFilter,
+              }),
             ]);
             const thankYouGivenAmount = thankYouGivenAmountResult[0]?.total || 0;
             const thankYouReceivedAmount = thankYouReceivedAmountResult[0]?.total || 0;
@@ -188,6 +201,7 @@ export default class DashboardController {
                     thankYouReceivedAmount,
                     thankYouReceivedCount,
                     visitorCount,
+                    expectedVisitorCount,
                     oneToOneCount
                 }
             });
