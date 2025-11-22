@@ -88,14 +88,14 @@ GripForum System
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "marishalagiri@gmail.com",
+          user: "gripbusinessforum@gmail.com",
           pass: process.env.MAIL_PASSWORD,
         },
       });
 
       // 5️⃣ Send Email
       await transporter.sendMail({
-        from: `"Grip Forum" <marishalagiri@gmail.com>`,
+        from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
         to: toMemberEmail,
         subject: "You Received a New Referral",
         text: mailMessage,
