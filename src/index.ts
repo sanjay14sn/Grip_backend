@@ -87,8 +87,8 @@ const initServer = async (): Promise<void> => {
     );
     console.log("✅ CORS middleware enabled");
 
-    app.use(express.json({ limit: "10mb" }));
-    console.log("✅ JSON parser enabled");
+    // app.use(express.json({ limit: "10mb" }));
+    // console.log("✅ JSON parser enabled");
 
     // --- Serve static files ---
     const publicDir = path.join(process.cwd(), "public");
@@ -97,6 +97,15 @@ const initServer = async (): Promise<void> => {
 
     // --- Hook routing-controllers ---
     console.log("🧩 Registering routing-controllers...");
+    // useExpressServer(app, {
+    //   controllers,
+    //   middlewares,
+    //   defaultErrorHandler: true,
+    //   validation: true,
+    // });
+
+
+    // ✅ Setup routing-controllers (handles JSON internally)
     useExpressServer(app, {
       controllers,
       middlewares,
@@ -108,6 +117,8 @@ const initServer = async (): Promise<void> => {
         validationError: { target: false },
       },
     });
+    console.log("✅ routing-controllers setup completed");
+
     console.log("✅ routing-controllers setup completed");
 
     // --- Connect database ---
@@ -145,3 +156,4 @@ const initServer = async (): Promise<void> => {
 };
 
 initServer();
+

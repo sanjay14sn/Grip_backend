@@ -29,6 +29,6 @@ export class ListPaymentDto {
 
     @IsOptional()
     @IsString()
-    @IsIn(['meeting', 'event'])
-    purpose?: 'meeting' | 'event';
+    @IsIn(['meeting', 'event','training'])
+    purpose?: 'meeting' | 'event' |'training';
 }

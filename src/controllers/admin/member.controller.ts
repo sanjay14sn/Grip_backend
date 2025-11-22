@@ -60,7 +60,6 @@ export default class MemberController {
           memberData.chapterInfo.stateName.trim();
       }
 
-      console.log(memberData?.personalDetails?.renewalDate,"rrrrrrrrr")
 
       const member = new Member({
         ...memberData,
@@ -808,18 +807,41 @@ export default class MemberController {
     const { memberIds } = body;
 
     if (!memberIds || memberIds.length === 0) {
-      return res.status(400).json({ success: false, message: "memberIds are required" });
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required"
+      });
     }
 
     try {
       const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
 
-      const counts = await Attendance.aggregate([
-        { $match: { memberId: { $in: objIds }, isDelete: 0 } },
+      /* --------------------------------------------------
+          1) GET attendance for meeting/event/training
+         -------------------------------------------------- */
+      const attendanceCounts = await Attendance.aggregate([
+        {
+          $match: { memberId: { $in: objIds }, isDelete: 0 }
+        },
+        {
+          $lookup: {
+            from: "payments",
+            localField: "meetingId",
+            foreignField: "_id", // 🔹 fixed
+            as: "paymentData"
+          }
+        },
+        { $unwind: { path: "$paymentData", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            purpose: {
+              $toLower: { $ifNull: ["$paymentData.purpose", "meeting"] }
+            }
+          }
+        },
         {
           $group: {
-            _id: "$memberId",
-            totalMeetings: { $sum: 1 },
+            _id: { memberId: "$memberId", purpose: "$purpose" },
             present: { $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] } },
             absent: { $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] } },
             late: { $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] } },
@@ -829,22 +851,47 @@ export default class MemberController {
         }
       ]);
 
-      const countsMap: Record<string, any> = {};
-      counts.forEach(c => {
-        countsMap[c._id.toString()] = c;
-      });
+      /* --------------------------------------------------
+          2) Prepare final result structure
+         -------------------------------------------------- */
+      const result: any = {};
 
-      // Default 0 for members with no attendance records
       memberIds.forEach(id => {
-        if (!countsMap[id]) {
-          countsMap[id] = { totalMeetings: 0, present: 0, absent: 0, late: 0, managed: 0, substitute: 0 };
-        }
+        result[id] = {
+          meeting: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          event: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          training: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 }
+        };
       });
 
-      return res.status(200).json({ success: true, data: countsMap });
+      /* --------------------------------------------------
+          3) Insert attendance into result
+         -------------------------------------------------- */
+      attendanceCounts.forEach(row => {
+        const memberId = row._id.memberId.toString();
+        const purpose = row._id.purpose.toLowerCase(); // meeting, event, training
+
+        if (!result[memberId][purpose]) return;
+
+        result[memberId][purpose] = {
+          present: row.present,
+          absent: row.absent,
+          late: row.late,
+          managed: row.managed,
+          substitute: row.substitute
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch attendance counts" });
+      console.error("Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch attendance counts"
+      });
     }
   }
 
@@ -1229,4 +1276,265 @@ export default class MemberController {
       throw new InternalServerError("Failed to fetch CID by chapter");
     }
   }
+
+  @Post("/one-to-one-given-count")
+  async getOneToOneGivenCount(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({ success: false, message: "memberIds are required" });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // --- CURRENT MONTH RANGE ---
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date();
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      endOfMonth.setDate(0);
+      endOfMonth.setHours(23, 59, 59, 999);
+
+      // --- COUNT ONE-TO-ONE GIVEN FOR CURRENT MONTH ---
+      const givenCounts = await OneToOne.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            fromMember: { $in: objIds },
+            createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+          }
+        },
+        { $group: { _id: "$fromMember", count: { $sum: 1 } } }
+      ]);
+
+      // --- RESPONSE MAP ---
+      const result: Record<string, any> = {};
+      memberIds.forEach(id => {
+        result[id] = { givenCount: 0, points: 0 };
+      });
+
+      // --- FRACTIONAL SCORING: points = (count / 8) * 10 ---
+      const MIN_REQUIRED = 8;
+      const MAX_POINTS = 10;
+
+      givenCounts.forEach((c: any) => {
+        const count = c.count;
+
+        // fractional calculation
+        const points =
+          count >= MIN_REQUIRED
+            ? MAX_POINTS
+            : parseFloat(((count / MIN_REQUIRED) * MAX_POINTS).toFixed(2));
+
+        result[c._id.toString()] = {
+          givenCount: count,
+          points
+        };
+      });
+
+      return res.status(200).json({ success: true, data: result });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Failed to fetch one-to-one given count" });
+    }
+  }
+
+  @Post("/referral-given-count")
+  async getReferralGivenCountsByMembers(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      endOfMonth.setMilliseconds(-1);
+
+      const counts = await ReferralSlipModel.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            createdAt: { $gte: startOfMonth, $lte: endOfMonth }, // ⭐ Filter by current month
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            givenArr: { $push: "$fromMember" },
+            receivedArr: { $push: "$toMember" },
+          },
+        },
+      ]);
+
+      // ---------------------------
+      // Initialize map
+      // ---------------------------
+      const referralMap: Record<
+        string,
+        { givenCount: number; received: number; points: number }
+      > = {};
+
+      memberIds.forEach(id => {
+        referralMap[id] = { givenCount: 0, received: 0, points: 0 };
+      });
+
+      if (counts.length > 0) {
+        const givenArr = counts[0].givenArr.map((id: any) => id.toString());
+        const receivedArr = counts[0].receivedArr.map((id: any) => id.toString());
+
+        givenArr.forEach((id: any) => {
+          if (referralMap[id]) referralMap[id].givenCount += 1;
+        });
+
+        receivedArr.forEach((id: any) => {
+          if (referralMap[id]) referralMap[id].received += 1;
+        });
+      }
+
+      // ---------------------------
+      // ⭐ Points Calculation
+      // Minimum 6 referrals → 15 points
+      // Fraction applies if less than 6
+      // ---------------------------
+
+      const MIN_REFERRALS = 6;
+      const MAX_POINTS = 15;
+
+      Object.keys(referralMap).forEach(memberId => {
+        const given = referralMap[memberId].givenCount;
+
+        if (given >= MIN_REFERRALS) {
+          referralMap[memberId].points = MAX_POINTS;
+        } else {
+          const fraction = given / MIN_REFERRALS;
+          referralMap[memberId].points = Number((fraction * MAX_POINTS).toFixed(2));
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: referralMap,
+      });
+
+    } catch (error) {
+      console.error("Error fetching referral counts:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch referral counts",
+      });
+    }
+  }
+
+  @Post("/visitor-report-count")
+  async getVisitorReportCountsForMembers(
+    @Body() body: { memberIds: string[] },
+    @Res() res: Response
+  ) {
+    const { memberIds } = body;
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required"
+      });
+    }
+
+    try {
+      // Convert to ObjectIds
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // --- Current Month Range ---
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const endOfMonth = new Date(startOfMonth);
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      endOfMonth.setMilliseconds(-1);
+
+      // --- Aggregate Visitors for Current Month ---
+      const counts = await Visitor.aggregate([
+        {
+          $match: {
+            invitedBy: { $in: objIds },
+            isDelete: 0,
+            isActive: 1,
+            visitDate: { $gte: startOfMonth, $lte: endOfMonth } // ⭐ filter by month
+          }
+        },
+        {
+          $group: {
+            _id: "$invitedBy",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Prepare results
+      const visitorMap: Record<string, { visitors: number; points: number }> = {};
+
+      memberIds.forEach(id => {
+        visitorMap[id] = {
+          visitors: 0,
+          points: 0
+        };
+      });
+
+      counts.forEach(c => {
+        const memberId = c._id.toString();
+        const visitorCount = c.count;
+
+        // ⭐ Apply Metric Rule:
+        // If visitorCount >= 1 → 20 points, else 0
+        const points = visitorCount >= 1 ? 20 : 0;
+
+        visitorMap[memberId] = {
+          visitors: visitorCount,
+          points
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: visitorMap
+      });
+
+    } catch (error) {
+      console.error("Error fetching visitor counts:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch visitor counts"
+      });
+    }
+  }
 }
+
+
+
+
+

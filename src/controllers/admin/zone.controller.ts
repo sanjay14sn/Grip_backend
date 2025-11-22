@@ -257,4 +257,57 @@ export default class ZoneController {
             });
         }
     }
+
+        @Get("/list/public")
+        async getAllZonesPublic(
+            @QueryParams() queryParams: ListZoneDto,
+            @Res() res: Response
+        ) {
+            try {
+                const filter: FilterQuery<IZone> = { isDelete: 0 };
+    
+                if (queryParams.search) {
+                    filter.$or = [{ zoneName: { $regex: queryParams.search, $options: "i" } }];
+                }
+    
+                if (queryParams.countryName) {
+                    filter.countryName = { $regex: queryParams.countryName, $options: "i" };
+                }
+    
+                if (queryParams.stateName) {
+                    filter.stateName = { $regex: queryParams.stateName, $options: "i" };
+                }
+    
+                const sort: { [key: string]: 1 | -1 } = {};
+                if (queryParams.sortField) {
+                    sort[queryParams.sortField] = queryParams.sortOrder === "asc" ? 1 : -1;
+                }
+    
+                const page = queryParams.page || 1;
+                const limit = queryParams.limit || 100;
+                const skip = (page - 1) * limit;
+                const safeLimit = typeof limit === "number" ? limit : 10;
+    
+                const [zones, total] = await Promise.all([
+                    Zone.find(filter).sort(sort).skip(skip).limit(safeLimit),
+                    Zone.countDocuments(filter),
+                ]);
+    
+                return res.status(200).json({
+                    success: true,
+                    message: "Zones fetched successfully (public)",
+                    data: zones,
+                    meta: {
+                        page: queryParams.page,
+                        limit: queryParams.limit,
+                        total,
+                    },
+                });
+            } catch (error: unknown) {
+                return res.status(500).json({
+                    success: false,
+                    message: error instanceof Error ? error.message : "An unknown error occurred",
+                });
+            }
+        }
 }

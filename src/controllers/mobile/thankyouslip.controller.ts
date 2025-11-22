@@ -22,6 +22,8 @@ import ThankYouSlip, { IThankYouSlip } from "../../models/thankyouslip.model";
 import { Member } from "../../models/member.model";
 import NotificationController from "./notification.controller";
 import { ListThankYouSlipDto } from "../../dto/list-thankyouslip.dto";
+import nodemailer from "nodemailer";
+
 
 @JsonController("/api/mobile/thankyouslips")
 @UseBefore(AuthMiddleware)
@@ -47,9 +49,54 @@ export default class ThankYouSlipController {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+
       const savedThankYouSlip = await thankYouSlip.save();
 
-      // Create notification
+      // --------------------------------------------------
+      // SEND MAIL ONLY WHEN BUSINESS CLOSED
+      // --------------------------------------------------
+      if (createDto.referralStatus === "Business Closed") {
+        const fromUser = await Member.findById((req as any).user.id);
+        const toUser = await Member.findById(createDto.toMember);
+
+        if (!fromUser) {
+          throw new BadRequestError("From Member not found.");
+        }
+        if (!toUser) {
+          throw new BadRequestError("To Member not found for mail.");
+        }
+
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "gripbusinessforum@gmail.com",
+            pass: process.env.MAIL_PASSWORD,
+          },
+        });
+
+        const mailMessage = `
+Hello ${toUser.personalDetails.firstName},
+
+A business you referred has been closed successfully.
+
+Referral Name : ${createDto.referralName}
+Amount        : ${createDto.amount}
+Comments      : ${createDto.comments}
+Status        : Business Closed
+
+Regards,
+Grip Forum
+`;
+
+        await transporter.sendMail({
+          from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
+          to: fromUser.contactDetails.email,
+          subject: "Business Closed Update",
+          text: mailMessage,
+        });
+      }
+
+      // Notification (same as before)
       const fromMemberId = (req as any).user.id;
       if (createDto.toMember.toString() !== fromMemberId.toString()) {
         await NotificationController.createNotification(
@@ -61,13 +108,11 @@ export default class ThankYouSlipController {
         );
       }
 
-      return res
-        .status(201)
-        .json({
-          success: true,
-          message: "Thank You Slip created successfully",
-          data: savedThankYouSlip,
-        });
+      return res.status(201).json({
+        success: true,
+        message: "Thank You Slip created successfully",
+        data: savedThankYouSlip,
+      });
     } catch (error) {
       if (error instanceof BadRequestError) throw error;
       throw new InternalServerError("Failed to create Thank You Slip record");

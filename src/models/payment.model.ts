@@ -1,7 +1,7 @@
 import { Schema, model, Document, ObjectId } from 'mongoose';
 
 export interface IPayment extends Document {
-    purpose: 'meeting' | 'event';
+    purpose: 'meeting' | 'event'|'training';
     topic: string;
     image?: {
         docName: string;
@@ -26,6 +26,7 @@ export interface IPayment extends Document {
     createdBy: ObjectId;
     updatedBy?: ObjectId;
     deletedBy?: ObjectId;
+    trainingType?:string;
     deletedAt?: Date;
     isActive: number;
     isDelete: number;
@@ -36,16 +37,18 @@ const paymentSchema = new Schema<IPayment>(
         purpose: {
             type: String,
             required: true,
-            enum: ['meeting', 'event'],
+            enum: ['meeting', 'event','training'],
         },
         // ✅ Added hotelName field
         hotelName: {
-            type: String,
-            required: true,
+            type: String
         },
         topic: {
             type: String,
             required: true,
+        },
+        trainingType: {
+            type: String
         },
         image: {
             docName: { type: String },

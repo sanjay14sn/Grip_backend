@@ -32,6 +32,10 @@ export class CreatePaymentDto {
     purpose!: string;
 
     @IsString()
+    @IsNotEmpty()
+    trainingType!: string;
+
+    @IsString()
     topic!: string;
 
 
