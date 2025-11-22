@@ -46,7 +46,7 @@ export default class TopAchiverController {
     @Res() res: Response
   ) {
     try {
-      const record = await TopAchiver.findOne({ chapterId });
+      const record = await TopAchiver.findOne({ chapterId }).sort({ updatedAt: -1 }); 
 
       return res.status(200).json({
         success: true,
