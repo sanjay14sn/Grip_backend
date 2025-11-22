@@ -215,7 +215,9 @@ export default class MemberController {
 
   @Post("/")
   async createMember(
-    @Body({ validate: true }) memberData: CreateMemberDto,
+    // @Body({ validate: true })
+    @Body({ validate: { whitelist: true, forbidNonWhitelisted: false } })
+    memberData: CreateMemberDto,
     @Res() res: Response
   ) {
     try {
@@ -528,7 +530,9 @@ export default class MemberController {
   @Put("/:id")
   async updateMember(
     @Param("id") id: string,
-    @Body({ validate: true }) memberData: UpdateMemberDto,
+    // @Body({ validate: true })
+    @Body({ validate: { whitelist: true, forbidNonWhitelisted: false } })
+    memberData: UpdateMemberDto,
     @Res() res: Response
   ) {
     try {
