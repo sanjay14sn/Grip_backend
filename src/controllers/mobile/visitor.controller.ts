@@ -21,7 +21,9 @@ import { ListVisitorDto } from '../../dto/list-visitor.dto';
 import { FilterQuery } from 'mongoose';
 import { AuthMiddleware } from '../../middleware/AuthorizationMiddleware';
 import { Member } from "../../models/member.model";
-import { sendEmailWithEJS } from '../../services/EmailService';
+import nodemailer from "nodemailer";
+import PDFDocument from "pdfkit"; // For generating PDF
+import streamBuffers from "stream-buffers"; // To send PDF as buffer
 
 @JsonController('/api/mobile/visitors')
 @UseBefore(AuthMiddleware)
@@ -47,26 +49,95 @@ export default class VisitorController {
                 createdBy: (req as any)?.user?.id || null,
 
                 // IMPORTANT: Who actually invited the visitor (member ID from frontend)
-                invitedBy: createDto.invitedBy || (req as any)?.user?.id||null,
+                invitedBy: createDto.invitedBy || (req as any)?.user?.id || null,
             });
 
             const savedVisitor = await visitor.save();
 
-            // // 🔥 Trigger email after successful creation
-            // if (savedVisitor.email) {
-            //     await sendEmailWithEJS(
-            //         savedVisitor.email,
-            //         'Visitor Registration Successful',
-            //         {
-            //             name: savedVisitor.name,
-            //             category: savedVisitor.category,
-            //             company: savedVisitor.company,
-            //             mobile: savedVisitor.mobile,
-            //             invitedBy: savedVisitor.invitedBy,
-            //             createdAt: savedVisitor.createdAt,
-            //         }
-            //     );
-            // }
+            const visitorEmail = savedVisitor.email; // Make sure visitor object has email
+
+            // ---- Nodemailer Transporter ----
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: "gripbusinessforum@gmail.com",
+                    pass: process.env.MAIL_PASSWORD,
+                },
+            });
+
+            // -----------------------------
+            // 1️⃣ Thank You Email
+            // -----------------------------
+            const thankYouMessage = `
+Hello ${savedVisitor.name},
+
+Thank you for visiting Grip Forum. We appreciate your time and hope you had a great experience.
+
+Regards,
+Grip Forum Team
+`;
+
+            await transporter.sendMail({
+                from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
+                to: visitorEmail,
+                subject: "Thank You for Visiting Grip Forum",
+                text: thankYouMessage,
+            });
+
+            // -----------------------------
+            // 2️⃣ Email with PDF
+            // -----------------------------
+            // Generate PDF in memory
+            // Generate PDF in memory
+            const doc = new PDFDocument();
+            const bufferStream = new streamBuffers.WritableStreamBuffer({
+                initialSize: 1024,
+                incrementAmount: 1024,
+            });
+
+            doc.pipe(bufferStream);
+
+            doc.fontSize(16).text("Visitor Details", { underline: true });
+            doc.moveDown();
+            doc.fontSize(12).text(`Name       : ${savedVisitor.name}`);
+            doc.fontSize(12).text(`From       : ${createDto.invited_from}`);
+            doc.text(`Category   : ${savedVisitor.category}`);
+            doc.text(`Company    : ${savedVisitor.company}`);
+            doc.text(`Mobile     : ${savedVisitor.mobile}`);
+            doc.text(`Invited By : ${savedVisitor.invitedBy}`);
+            doc.text(`Created At : ${savedVisitor.createdAt.toISOString()}`);
+            doc.end();
+
+            const pdfMailMessage = `
+
+Please find attached  visitor details from Grip Forum.
+
+Regards,
+Grip Forum Team
+`;
+
+            // Wait for PDF buffer
+            await new Promise<void>((resolve) => bufferStream.on("finish", resolve));
+
+            // Get the buffer safely
+            const pdfBuffer = bufferStream.getContents();
+            if (!pdfBuffer) {
+                throw new Error("Failed to generate PDF buffer");
+            }
+
+            // Now send the email
+            await transporter.sendMail({
+                from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
+                to: `"Grip Forum" <gripbusinessforum@gmail.com>`,
+                subject: "Visitor Details",
+                text: pdfMailMessage,
+                attachments: [
+                    {
+                        filename: "VisitorDetails.pdf",
+                        content: pdfBuffer, // ✅ TypeScript now sees this as Buffer
+                    },
+                ],
+            });
 
 
             return res.status(201).json({
@@ -136,7 +207,7 @@ export default class VisitorController {
                     },
                     {
                         $unwind: {
-                            path:'$invitedBy',
+                            path: '$invitedBy',
                             preserveNullAndEmptyArrays: true
                         }
                     }
