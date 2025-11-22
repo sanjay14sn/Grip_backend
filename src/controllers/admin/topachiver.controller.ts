@@ -16,26 +16,39 @@ import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 @UseBefore(AuthMiddleware)
 export default class TopAchiverController {
   @Post("/:chapterId")
-  async createTopAchiver(
+  async createOrUpdateTopAchiver(
     @Param("chapterId") chapterId: string,
     @Body() data: TopAchiverDto,
     @Res() res: Response
   ) {
     try {
-      const saved = await TopAchiver.create({
-        chapterId,
-        ...data,
-      });
+      const updated = await TopAchiver.findOneAndUpdate(
+        { chapterId }, // Find record for this chapter
+        {
+          $set: {
+            chapterId,
+            business: data.business,
+            referrals: data.referrals,
+            visitors: data.visitors,
+          },
+        },
+        {
+          new: true, // Return updated record
+          upsert: true, // Create if doesn't exist
+          setDefaultsOnInsert: true, // Apply schema defaults if new
+        }
+      );
 
-      return res.status(201).json({
+      return res.status(200).json({
         success: true,
-        message: "Top achievers saved successfully",
-        data: saved,
+        message: "Top achievers updated successfully",
+        data: updated,
       });
     } catch (error) {
+      console.error("Top achiever update failed:", error);
       return res.status(500).json({
         success: false,
-        message: "Failed to save top achievers",
+        message: "Failed to update top achievers",
       });
     }
   }
@@ -46,7 +59,9 @@ export default class TopAchiverController {
     @Res() res: Response
   ) {
     try {
-      const record = await TopAchiver.findOne({ chapterId }).sort({ updatedAt: -1 }); 
+      const record = await TopAchiver.findOne({ chapterId }).sort({
+        updatedAt: -1,
+      });
 
       return res.status(200).json({
         success: true,
