@@ -1,0 +1,384 @@
+🧩 Loading environment variables...
+✅ .env loaded successfully
+🔑 Environment Variables Summary:
+{
+  NODE_ENV: 'development',
+  PORT: '4002',
+  MONGO_URI: '✅ Loaded',
+  JWT_SECRET: '✅ Loaded'
+}
+🚀 Initializing server...
+📦 Loading controllers...
+src/controllers/mobile: [AttendanceController]
+src/controllers/mobile: [AuthController]
+src/controllers/mobile: [ChapterController]
+src/controllers/mobile: [DashboardController]
+src/controllers/mobile: [ExpectedVisitorsController]
+src/controllers/mobile: [MemberController]
+src/controllers/mobile: [NotificationController]
+src/controllers/mobile: [OneToOneController]
+src/controllers/mobile: [PaymentController]
+src/controllers/mobile: [ReferralSlipController]
+src/controllers/mobile: [ReferralStatusController]
+src/controllers/mobile: [TestimonialSlipController]
+src/controllers/mobile: [ThankYouSlipController]
+src/controllers/mobile: [TransactionController]
+src/controllers/mobile: [UserController]
+src/controllers/mobile: [VisitorController]
+src/controllers/mobile: [ZoneController]
+src/controllers/admin: [PinController]
+src/controllers/admin: [AttendanceController]
+src/controllers/admin: [AuthController]
+src/controllers/admin: [ChapterController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [DashboardController]
+src/controllers/admin: [ExpectedVisitorsController]
+src/controllers/admin: [HeadTableController]
+src/controllers/admin: [MemberController]
+src/controllers/admin: [OneToOneController]
+src/controllers/admin: [PaymentController]
+src/controllers/admin: [PermissionController]
+src/controllers/admin: [ReferralSlipController]
+src/controllers/admin: [RoleController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [TestimonialSlipController]
+src/controllers/admin: [ThankYouSlipController]
+src/controllers/admin: [TopAchiverController]
+src/controllers/admin: [UserController]
+src/controllers/admin: [VisitorController]
+src/controllers/admin: [ZoneController]
+✅ Loaded 38 controllers
+⚙️ Loading middlewares...
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+✅ Loaded 3 middlewares
+💓 Registering root health check endpoint...
+🧰 Setting up global middlewares...
+✅ File upload middleware enabled
+✅ CORS middleware enabled
+📂 Serving static files from: /Users/sanjaynaveen/Grip_backend/public
+🧩 Registering routing-controllers...
+✅ routing-controllers setup completed
+✅ routing-controllers setup completed
+🧠 Connecting to MongoDB...
+MongoDB connection established successfully.
+Connected to MongoDB at mongodb+srv://venkat_db_user:gkvOYrsmSijlT8IH@cluster0.nmftukw.mongodb.net/grip_live
+✅ Database connection established
+✅ Server initialization complete
+🚀 Server running at http://localhost:4002
+🔌 Socket.IO initialised
+📡 Socket service initialized
+{
+  isDelete: 0,
+  invitedBy: new ObjectId('688b626a34c2dd67fdb48fcc'),
+  createdAt: { '$gte': 2025-10-21T18:30:00.000Z, '$lt': 2025-11-22T18:30:00.000Z }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:30:00 PM
+{
+  isDelete: 0,
+  invitedBy: new ObjectId('688b626a34c2dd67fdb48fcc'),
+  createdAt: { '$gte': 2025-10-21T18:30:00.000Z, '$lt': 2025-11-22T18:30:00.000Z }
+}
+{
+  isDelete: 0,
+  invitedBy: new ObjectId('688b626a34c2dd67fdb48fcc'),
+  createdAt: { '$gte': 2025-10-21T18:30:00.000Z, '$lt': 2025-11-22T18:30:00.000Z }
+}
+{
+  isDelete: 0,
+  invitedBy: new ObjectId('688b626a34c2dd67fdb48fcc'),
+  createdAt: { '$gte': 2025-10-21T18:30:00.000Z, '$lt': 2025-11-22T18:30:00.000Z }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:35:00 PM
+Directory created successfully
+Directory is writable
+QR code generated successfully
+Payment record updated with QR code info
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:40:00 PM
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:45:00 PM
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:50:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 2:55:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:00:00 PM
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:10:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:15:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:20:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:25:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:30:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:35:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:40:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:45:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:50:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 3:55:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:00:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:05:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:10:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:30:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:35:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:40:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:45:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:50:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 4:55:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:00:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:05:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:10:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:15:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:20:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:25:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:30:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:35:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:40:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/22/2025, 5:45:00 PM
+🛑 Received shutdown signal. Closing server...
+✅ HTTP server closed.
+✅ Database connection closed.
+🧩 Loading environment variables...
+✅ .env loaded successfully
+🔑 Environment Variables Summary:
+{
+  NODE_ENV: 'development',
+  PORT: '4002',
+  MONGO_URI: '✅ Loaded',
+  JWT_SECRET: '✅ Loaded'
+}
+🚀 Initializing server...
+📦 Loading controllers...
+src/controllers/mobile: [AttendanceController]
+src/controllers/mobile: [AuthController]
+src/controllers/mobile: [ChapterController]
+src/controllers/mobile: [DashboardController]
+src/controllers/mobile: [ExpectedVisitorsController]
+src/controllers/mobile: [MemberController]
+src/controllers/mobile: [NotificationController]
+src/controllers/mobile: [OneToOneController]
+src/controllers/mobile: [PaymentController]
+src/controllers/mobile: [ReferralSlipController]
+src/controllers/mobile: [ReferralStatusController]
+src/controllers/mobile: [TestimonialSlipController]
+src/controllers/mobile: [ThankYouSlipController]
+src/controllers/mobile: [AnonymousController]
+src/controllers/mobile: [TransactionController]
+src/controllers/mobile: [UserController]
+src/controllers/mobile: [VisitorController]
+src/controllers/mobile: [ZoneController]
+src/controllers/admin: [PinController]
+src/controllers/admin: [AttendanceController]
+src/controllers/admin: [AuthController]
+src/controllers/admin: [ChapterController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [DashboardController]
+src/controllers/admin: [ExpectedVisitorsController]
+src/controllers/admin: [HeadTableController]
+src/controllers/admin: [MemberController]
+src/controllers/admin: [OneToOneController]
+src/controllers/admin: [PaymentController]
+src/controllers/admin: [PermissionController]
+src/controllers/admin: [ReferralSlipController]
+src/controllers/admin: [RoleController]
+src/controllers/admin: [AnonymousController]
+src/controllers/admin: [TestimonialSlipController]
+src/controllers/admin: [ThankYouSlipController]
+src/controllers/admin: [TopAchiverController]
+src/controllers/admin: [UserController]
+src/controllers/admin: [VisitorController]
+src/controllers/admin: [ZoneController]
+✅ Loaded 39 controllers
+⚙️ Loading middlewares...
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+src/middleware: [AnonymousMiddleware]
+✅ Loaded 3 middlewares
+💓 Registering root health check endpoint...
+🧰 Setting up global middlewares...
+✅ File upload middleware enabled
+✅ CORS middleware enabled
+📂 Serving static files from: /Users/sanjaynaveen/Grip_backend/public
+🧩 Registering routing-controllers...
+✅ routing-controllers setup completed
+✅ routing-controllers setup completed
+🧠 Connecting to MongoDB...
+MongoDB connection established successfully.
+Connected to MongoDB at mongodb+srv://venkat_db_user:gkvOYrsmSijlT8IH@cluster0.nmftukw.mongodb.net/grip_live
+✅ Database connection established
+✅ Server initialization complete
+🚀 Server running at http://localhost:4002
+🔌 Socket.IO initialised
+📡 Socket service initialized
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-23T00:00:00.000Z,
+  toDate: 2025-11-23T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-22T18:30:00.000Z,
+    '$lte': 2025-11-23T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 10:20:00 AM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 10:35:00 AM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 10:40:00 AM
+===== RECEIVED/LIST DEBUG START =====
+Logged-in USER ID  : 688b626a34c2dd67fdb48fcc
+Query Params (raw) : ListReferralSlipDto {
+  fromDate: 2025-10-22T00:00:00.000Z,
+  toDate: 2025-11-22T00:00:00.000Z
+}
+Final Mongo Query  : {
+  isDelete: 0,
+  toMember: '688b626a34c2dd67fdb48fcc',
+  createdAt: {
+    '$gte': 2025-10-21T18:30:00.000Z,
+    '$lte': 2025-11-22T18:29:59.999Z
+  }
+}
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 10:45:00 AM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 10:50:00 AM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 11:55:00 AM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:20:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:30:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:35:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:40:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:45:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:50:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 12:55:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 1:00:00 PM
+Running absent marking cron job...
+✅ Absent cron job is running at 11/23/2025, 1:05:00 PM

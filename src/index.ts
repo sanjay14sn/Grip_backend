@@ -156,4 +156,3 @@ const initServer = async (): Promise<void> => {
 };
 
 initServer();
-
