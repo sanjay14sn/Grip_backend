@@ -91,9 +91,10 @@ const initServer = async (): Promise<void> => {
     // console.log("✅ JSON parser enabled");
 
     // --- Serve static files ---
-    const publicDir = path.join(process.cwd(), "public");
-    console.log("📂 Serving static files from:", publicDir);
-    app.use("/api/public", express.static(publicDir));
+     app.use("/public", express.static(path.join(__dirname, "../public")));
+
+
+
 
     // --- Hook routing-controllers ---
     console.log("🧩 Registering routing-controllers...");

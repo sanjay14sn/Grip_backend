@@ -1,3 +1,5 @@
+import multer from "multer";
+import path from "path";
 import {
   JsonController,
   Get,
@@ -18,6 +20,30 @@ import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { Uploads } from "../../utils/uploads/image.upload";
 import { FilterQuery } from "mongoose";
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // controller is inside src/controllers/Admin/
+    // so go 2 levels up to reach project root
+    cb(null, path.join(__dirname, "../../../public/pins"));
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, "img-" + Date.now() + ext);
+  },
+});
+
+const upload = multer({ storage });
+
+declare global {
+  namespace Express {
+    interface Request {
+      file?: Express.Multer.File;
+    }
+  }
+}
+
+
+
 @JsonController("/api/admin/pins")
 @UseBefore(AuthMiddleware)
 export default class PinController {
@@ -37,19 +63,16 @@ export default class PinController {
           .json({ success: false, message: "Name is required" });
       }
 
-      let imageMeta = null;
+  let imageMeta = null;
 
-      // ✅ handle uploaded image (same as UserController)
-      if (req.files && (req.files as any).image) {
-        const file = Array.isArray((req.files as any).image)
-          ? (req.files as any).image[0]
-          : (req.files as any).image;
+  if (req.file) {
+    imageMeta = {
+      docName: req.file.filename,
+      docPath: "pins",
+      originalName: req.file.originalname,
+    };
+  }
 
-        // processFiles(folder = "pins", type = "img")
-        imageMeta = (
-          await Uploads.processFiles([file], "pins", "img", undefined, "")
-        )[0];
-      }
 
       const newPin = new Pin({
         name,
