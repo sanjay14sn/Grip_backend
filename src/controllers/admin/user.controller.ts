@@ -13,7 +13,7 @@ import {
     QueryParam,
 } from "routing-controllers";
 import { Request, Response } from "express";
-import { Uploads } from "../../utils/uploads/image.upload";
+import { Uploads } from "../../utils/uploads/imageUpload";
 import { CreateUserDto } from "../../dto/create-user.dto";
 import { UpdateUserDto } from "../../dto/update-user.dto";
 import { ListUsersDto } from "../../dto/list-users.dto";

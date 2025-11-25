@@ -17,8 +17,8 @@ import { Request, Response } from "express";
 import { Pin, IPin } from "../../models/pin.model";
 import { CreatePinDto, UpdatePinDto } from "../../dto/create-pin.dto";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
-import { Uploads } from "../../utils/uploads/image.upload";
 import { FilterQuery } from "mongoose";
+import { Uploads } from "../../utils/uploads/imageUpload";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

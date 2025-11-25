@@ -15,7 +15,7 @@ import {
 } from "routing-controllers";
 import { Request, Response } from "express";
 import { OneToOne, IOneToOne } from "../../models/onetoone.model";
-import { Uploads } from "../../utils/uploads/image.upload";
+import { Uploads } from "../../utils/uploads/imageUpload";
 import { CreateOneToOneDto } from "../../dto/create-onetoone.dto";
 import { ListOneToOneDto } from "../../dto/list-onetoone.dto";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";

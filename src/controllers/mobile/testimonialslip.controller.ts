@@ -18,7 +18,7 @@ import { Request, Response } from "express";
 import { FilterQuery } from "mongoose";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { CreateTestimonialSlipDto } from "../../dto/create-testimonialslip.dto";
-import { Uploads } from "../../utils/uploads/image.upload";
+import { Uploads } from "../../utils/uploads/imageUpload";
 import {
   ITestimonialSlip,
   TestimonialSlip,

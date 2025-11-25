@@ -23,13 +23,19 @@ import {
 import { ListMembersDto } from "../../dto/list-member.dto";
 import { UpdatePinDto } from "../../dto/update-pin.dto";
 import { Member } from "../../models/member.model";
-import { Types } from "mongoose";
-import { Uploads } from "../../utils/uploads/image.upload";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { UpdateProfileMemberDto } from "../../dto/update-profile-member.dto";
+import { OneToOne } from "../../models/onetoone.model";
+import { ReferralSlipModel } from "../../models/referralslip.model";
+import { Visitor } from "../../models/visitor.model";
+import ThankYouSlip from "../../models/thankyouslip.model";
+import { TestimonialSlip } from "../../models/testimonialslip.model";
+import { Attendance } from "../../models/attendance.model";
 
 @JsonController("/api/mobile/members")
+@UseBefore(AuthMiddleware)
 export default class MemberController {
   @Get("/by-chapter/:chapterId")
   async getMembersByChapterId(
@@ -573,7 +579,7 @@ export default class MemberController {
       }
       throw new InternalServerError(
         "Failed to update member: " +
-          (error instanceof Error ? error.message : JSON.stringify(error))
+        (error instanceof Error ? error.message : JSON.stringify(error))
       );
     }
   }
@@ -601,7 +607,7 @@ export default class MemberController {
 
       // Update nested contactDetails
       if (memberData.contactDetails) {
-        const { secondaryPhone, website  } = memberData.contactDetails;
+        const { secondaryPhone, website } = memberData.contactDetails;
         if (secondaryPhone)
           existingMember.contactDetails.secondaryPhone = secondaryPhone;
         if (website) existingMember.contactDetails.website = website;
@@ -672,7 +678,7 @@ export default class MemberController {
       }
       throw new InternalServerError(
         "Failed to update member: " +
-          (error instanceof Error ? error.message : JSON.stringify(error))
+        (error instanceof Error ? error.message : JSON.stringify(error))
       );
     }
   }
@@ -889,5 +895,498 @@ export default class MemberController {
         limit,
       },
     });
+  }
+
+  @Post("/meetings-attendance-count")
+  async getMembersAttendanceCount(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    let { memberIds } = body;
+    // --- NEW: handle "fromUser" ---
+    if (memberIds === "fromUser") {
+      const currentUserId = (req as any).user?.id;
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Current user ID not found in token",
+        });
+      }
+      memberIds = [currentUserId]; // <-- normalize to array
+    }
+
+    // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+    if (typeof memberIds === "string") {
+      memberIds = [memberIds];
+    }
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      /* --------------------------------------------------
+          1) GET attendance for meeting/event/training
+         -------------------------------------------------- */
+      const attendanceCounts = await Attendance.aggregate([
+        {
+          $match: { memberId: { $in: objIds }, isDelete: 0 }
+        },
+        {
+          $lookup: {
+            from: "payments",
+            localField: "meetingId",
+            foreignField: "_id", // 🔹 fixed
+            as: "paymentData"
+          }
+        },
+        { $unwind: { path: "$paymentData", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            purpose: {
+              $toLower: { $ifNull: ["$paymentData.purpose", "meeting"] }
+            }
+          }
+        },
+        {
+          $group: {
+            _id: { memberId: "$memberId", purpose: "$purpose" },
+            present: { $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] } },
+            absent: { $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] } },
+            late: { $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] } },
+            managed: { $sum: { $cond: [{ $eq: ["$status", "medical"] }, 1, 0] } },
+            substitute: { $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] } }
+          }
+        }
+      ]);
+
+      /* --------------------------------------------------
+          2) Prepare final result structure
+         -------------------------------------------------- */
+      const result: any = {};
+
+      memberIds.forEach(id => {
+        result[id] = {
+          meeting: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          event: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          training: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 }
+        };
+      });
+
+      /* --------------------------------------------------
+          3) Insert attendance into result
+         -------------------------------------------------- */
+      attendanceCounts.forEach(row => {
+        const memberId = row._id.memberId.toString();
+        const purpose = row._id.purpose.toLowerCase(); // meeting, event, training
+
+        if (!result[memberId][purpose]) return;
+
+        result[memberId][purpose] = {
+          present: row.present,
+          absent: row.absent,
+          late: row.late,
+          managed: row.managed,
+          substitute: row.substitute
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch attendance counts"
+      });
+    }
+  }
+
+
+  @Post("/one-to-one-count")
+  async getOneToOneCountForMembers(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    let { memberIds } = body;
+
+    // --- NEW: handle "fromUser" ---
+    if (memberIds === "fromUser") {
+      const currentUserId = (req as any).user?.id;
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Current user ID not found in token",
+        });
+      }
+      memberIds = [currentUserId]; // <-- normalize to array
+    }
+
+    // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+    if (typeof memberIds === "string") {
+      memberIds = [memberIds];
+    }
+
+    // --- VALIDATION ---
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // Aggregate only 'from' counts
+      const fromCounts = await OneToOne.aggregate([
+        { $match: { isDelete: 0, fromMember: { $in: objIds } } },
+        { $group: { _id: "$fromMember", count: { $sum: 1 } } }
+      ]);
+
+      // Convert to map for easy lookup
+      const countsMap: Record<string, { fromCount: number }> = {};
+      memberIds.forEach(id => {
+        countsMap[id] = { fromCount: 0 };
+      });
+
+      fromCounts.forEach((c: any) => {
+        countsMap[c._id.toString()].fromCount = c.count;
+      });
+
+      return res.status(200).json({ success: true, data: countsMap });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "Failed to fetch one-to-one counts" });
+    }
+  }
+
+  @Post("/referral-count")
+  async getReferralCountsByMembers(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    let { memberIds } = body;
+    // --- NEW: handle "fromUser" ---
+    if (memberIds === "fromUser") {
+      const currentUserId = (req as any).user?.id;
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Current user ID not found in token",
+        });
+      }
+      memberIds = [currentUserId]; // <-- normalize to array
+    }
+
+    // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+    if (typeof memberIds === "string") {
+      memberIds = [memberIds];
+    }
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // Aggregate counts for given members
+      const counts = await ReferralSlipModel.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            givenArr: { $push: "$fromMember" },
+            receivedArr: { $push: "$toMember" }
+          }
+        }
+      ]);
+
+      // Initialize map with zero counts
+      const referralMap: Record<string, { given: number; received: number }> = {};
+      memberIds.forEach(id => {
+        referralMap[id] = { given: 0, received: 0 };
+      });
+
+      if (counts.length > 0) {
+        const givenArr: string[] = counts[0].givenArr.map((id: any) => id.toString());
+        const receivedArr: string[] = counts[0].receivedArr.map((id: any) => id.toString());
+
+        givenArr.forEach(id => {
+          if (referralMap[id]) referralMap[id].given += 1;
+        });
+
+        receivedArr.forEach(id => {
+          if (referralMap[id]) referralMap[id].received += 1;
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: referralMap
+      });
+
+    } catch (error) {
+      console.error("Error fetching referral counts:", error);
+      return res.status(500).json({ success: false, message: "Failed to fetch referral counts" });
+    }
+  }
+
+  @Post('/thank-you-slip-amounts')
+  async getThankYouSlipAmounts(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    let { memberIds } = body;
+    // --- NEW: handle "fromUser" ---
+    if (memberIds === "fromUser") {
+      const currentUserId = (req as any).user?.id;
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Current user ID not found in token",
+        });
+      }
+      memberIds = [currentUserId]; // <-- normalize to array
+    }
+
+    // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+    if (typeof memberIds === "string") {
+      memberIds = [memberIds];
+    }
+
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      // Aggregate amounts for given members
+      const amounts = await ThankYouSlip.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } }
+            ]
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            givenArr: { $push: "$fromMember" },
+            givenAmounts: { $push: "$amount" },          // sum of given amounts
+            receivedArr: { $push: "$toMember" },
+            receivedAmounts: { $push: "$amount" }        // sum of received amounts
+          }
+        }
+      ]);
+
+      // Initialize map with zero amounts
+      const thankYouMap: Record<string, { givenAmount: number; receivedAmount: number }> = {};
+      memberIds.forEach(id => {
+        thankYouMap[id] = { givenAmount: 0, receivedAmount: 0 };
+      });
+
+      if (amounts.length > 0) {
+        const { givenArr, givenAmounts, receivedArr, receivedAmounts } = amounts[0];
+
+        givenArr.forEach((id: any, idx: number) => {
+          const key = id.toString();
+          if (thankYouMap[key]) thankYouMap[key].givenAmount += givenAmounts[idx] || 0;
+        });
+
+        receivedArr.forEach((id: any, idx: number) => {
+          const key = id.toString();
+          if (thankYouMap[key]) thankYouMap[key].receivedAmount += receivedAmounts[idx] || 0;
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: thankYouMap
+      });
+
+    } catch (error) {
+      console.error("Error fetching ThankYouSlip amounts:", error);
+      return res.status(500).json({ success: false, message: "Failed to fetch ThankYouSlip amounts" });
+    }
+  }
+
+  @Post("/visitor-count")
+  async getVisitorCountsForMembers(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    let { memberIds } = body;
+    // --- NEW: handle "fromUser" ---
+    if (memberIds === "fromUser") {
+      const currentUserId = (req as any).user?.id;
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Current user ID not found in token",
+        });
+      }
+      memberIds = [currentUserId]; // <-- normalize to array
+    }
+
+    // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+    if (typeof memberIds === "string") {
+      memberIds = [memberIds];
+    }
+    if (!memberIds || memberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "memberIds are required",
+      });
+    }
+
+
+    try {
+      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+
+      const counts = await Visitor.aggregate([
+        { $match: { invitedBy: { $in: objIds }, isDelete: 0, isActive: 1 } },
+        { $group: { _id: "$invitedBy", count: { $sum: 1 } } }
+      ]);
+
+      const visitorMap: Record<string, number> = {};
+      memberIds.forEach(id => {
+        visitorMap[id] = 0; // default to 0
+      });
+
+      counts.forEach(c => {
+        visitorMap[c._id.toString()] = c.count;
+      });
+
+      return res.status(200).json({ success: true, data: visitorMap });
+    } catch (error) {
+      console.error("Error fetching visitor counts:", error);
+      return res.status(500).json({ success: false, message: "Failed to fetch visitor counts" });
+    }
+  }
+
+  @Post("/testimonial-counts")
+  async getTestimonialCounts(
+    @Req() req: Request,
+    @Body() body: { memberIds: string[] | string },
+    @Res() res: Response
+  ) {
+    try {
+      let { memberIds } = body;
+
+      // --- NEW: handle "fromUser" ---
+      if (memberIds === "fromUser") {
+        const currentUserId = (req as any).user?.id;
+        if (!currentUserId) {
+          return res.status(400).json({
+            success: false,
+            message: "Current user ID not found in token",
+          });
+        }
+        memberIds = [currentUserId]; // <-- normalize to array
+      }
+
+      // --- IF SINGLE STRING, CONVERT TO ARRAY ---
+      if (typeof memberIds === "string") {
+        memberIds = [memberIds];
+      }
+
+      // --- VALIDATION ---
+      if (!memberIds || memberIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "memberIds are required",
+        });
+      }
+
+      const objIds = memberIds.map((id) => new mongoose.Types.ObjectId(id));
+
+      const result = await TestimonialSlip.aggregate([
+        {
+          $match: {
+            isDelete: 0,
+            isActive: 1,
+            $or: [
+              { fromMember: { $in: objIds } },
+              { toMember: { $in: objIds } },
+            ],
+          },
+        },
+        {
+          $facet: {
+            given: [
+              { $match: { fromMember: { $in: objIds } } },
+              { $group: { _id: "$fromMember", count: { $sum: 1 } } },
+            ],
+            received: [
+              { $match: { toMember: { $in: objIds } } },
+              { $group: { _id: "$toMember", count: { $sum: 1 } } },
+            ],
+          },
+        },
+      ]);
+
+      const countsMap: Record<
+        string,
+        { given: number; received: number }
+      > = {};
+
+      memberIds.forEach((id) => {
+        countsMap[id] = { given: 0, received: 0 };
+      });
+
+      const { given, received } = result[0];
+
+      given.forEach((g: any) => {
+        countsMap[g._id.toString()].given = g.count;
+      });
+
+      received.forEach((r: any) => {
+        countsMap[r._id.toString()].received = r.count;
+      });
+
+      return res.status(200).json({ success: true, data: countsMap });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch testimonial counts",
+      });
+    }
   }
 }

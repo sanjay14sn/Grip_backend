@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { AuthMiddleware } from '../../middleware/AuthorizationMiddleware';
 import { CreatePaymentDto } from '../../dto/create-payment.dto';
-import { Uploads } from '../../utils/uploads/image.upload';
+import { Uploads } from '../../utils/uploads/imageUpload';
 import Payment, { IPayment } from '../../models/payment.model';
 import { ListPaymentDto } from '../../dto/list-payment.dto';
 
