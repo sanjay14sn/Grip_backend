@@ -29,6 +29,104 @@ import nodemailer from "nodemailer";
 @JsonController("/api/mobile/thankyouslips")
 @UseBefore(AuthMiddleware)
 export default class ThankYouSlipController {
+  //   @Post("/")
+  //   async createThankYouSlip(
+  //     @Body({ validate: true }) createDto: CreateThankYouSlipDto,
+  //     @Res() res: Response,
+  //     @Req() req: Request
+  //   ) {
+  //     try {
+  //       const fromMemberId = (req as any).user.id;
+
+  //       // --------------------------------------------------
+  //       // 1️⃣ Validate Members
+  //       // --------------------------------------------------
+  //       const toMember = await Member.findById(createDto.toMember);
+  //       const fromMember = await Member.findById(fromMemberId);
+
+  //       if (!toMember) {
+  //         throw new BadRequestError(
+  //           "The specified recipient member does not exist."
+  //         );
+  //       }
+
+  //       if (!fromMember) {
+  //         throw new BadRequestError("Logged-in user not found.");
+  //       }
+  //       const thankYouSlip = new ThankYouSlip({
+  //         ...createDto,
+  //         fromMember: fromMemberId,
+  //         createdBy: fromMemberId,
+  //         createdAt: new Date(),
+  //         updatedAt: new Date(),
+  //       });
+
+  //       const savedThankYouSlip = await thankYouSlip.save();
+  //       await ReferralStatusLog.findOneAndUpdate(
+  //         { referralId: createDto.referralId }, // match referralId
+  //         {
+  //           status: createDto.referralStatus, // Only update status
+  //           updatedAt: new Date(),
+  //         },
+  //         { new: true, upsert: true } // create if not exists
+  //       );
+
+  //       // --------------------------------------------------
+  //       // 4️⃣ SEND MAIL IF BUSINESS CLOSED
+  //       // --------------------------------------------------
+  //       if (createDto.referralStatus === "Business Closed") {
+  //         const transporter = nodemailer.createTransport({
+  //           service: "gmail",
+  //           auth: {
+  //             user: "gripbusinessforum@gmail.com",
+  //             pass: process.env.MAIL_PASSWORD,
+  //           },
+  //         });
+
+  //         const mailMessage = `
+  // Hello ${toMember.personalDetails.firstName},
+
+  // A business you referred has been closed successfully.
+
+  // Referral Name : ${createDto.referralName}
+  // Amount        : ${createDto.amount}
+  // Comments      : ${createDto.comments}
+  // Status        : Business Closed
+
+  // Regards,
+  // Grip Forum
+  // `;
+
+  //         await transporter.sendMail({
+  //           from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
+  //           to: toMember.contactDetails.email, // ✔ correct receiver
+  //           subject: "Business Closed Update",
+  //           text: mailMessage,
+  //         });
+  //       }
+  //       if (createDto.toMember.toString() !== fromMemberId.toString()) {
+  //         await NotificationController.createNotification(
+  //           "thankyou",
+  //           createDto.toMember,
+  //           fromMemberId,
+  //           savedThankYouSlip._id,
+  //           "thankyouslips"
+  //         );
+  //       }
+
+  //       return res.status(201).json({
+  //         success: true,
+  //         message: "Thank You Slip created successfully",
+  //         data: savedThankYouSlip,
+  //       });
+  //     } catch (error) {
+  //       console.error("THANK YOU SLIP ERROR:", error);
+
+  //       if (error instanceof BadRequestError) throw error;
+
+  //       throw new InternalServerError("Failed to create Thank You Slip record");
+  //     }
+  //   }
   @Post("/")
   async createThankYouSlip(
     @Body({ validate: true }) createDto: CreateThankYouSlipDto,
@@ -39,7 +137,7 @@ export default class ThankYouSlipController {
       const fromMemberId = (req as any).user.id;
 
       // --------------------------------------------------
-      // 1️⃣ Validate Members
+      // 1️⃣ VALIDATE MEMBERS
       // --------------------------------------------------
       const toMember = await Member.findById(createDto.toMember);
       const fromMember = await Member.findById(fromMemberId);
@@ -49,10 +147,13 @@ export default class ThankYouSlipController {
           "The specified recipient member does not exist."
         );
       }
-
       if (!fromMember) {
         throw new BadRequestError("Logged-in user not found.");
       }
+
+      // --------------------------------------------------
+      // 2️⃣ CREATE THANK YOU SLIP
+      // --------------------------------------------------
       const thankYouSlip = new ThankYouSlip({
         ...createDto,
         fromMember: fromMemberId,
@@ -62,14 +163,37 @@ export default class ThankYouSlipController {
       });
 
       const savedThankYouSlip = await thankYouSlip.save();
-      await ReferralStatusLog.findOneAndUpdate(
-        { referralId: createDto.referralId }, // match referralId
+
+      // --------------------------------------------------
+      // 3️⃣ UPDATE THE CORRECT REFERRAL STATUS RECORD
+      // --------------------------------------------------
+      // UNIQUE KEY → referralId + toMember + fromMember + status
+      const updatedLog = await ReferralStatusLog.findOneAndUpdate(
         {
-          status: createDto.referralStatus, // Only update status
+          referralId: createDto.referralId,
+          toMember: createDto.toMember,
+          fromMember: fromMemberId,
+          status: createDto.referralStatus, // ← UNIQUE MATCH!
+        },
+        {
+          status: createDto.referralStatus,
           updatedAt: new Date(),
         },
-        { new: true, upsert: true } // create if not exists
+        { new: true }
       );
+
+      // If no log found → create new one
+      if (!updatedLog) {
+        await ReferralStatusLog.create({
+          referralId: createDto.referralId,
+          toMember: createDto.toMember,
+          fromMember: fromMemberId,
+          referralDetail: createDto.referralDetail,
+          status: createDto.referralStatus,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
 
       // --------------------------------------------------
       // 4️⃣ SEND MAIL IF BUSINESS CLOSED
@@ -99,11 +223,15 @@ Grip Forum
 
         await transporter.sendMail({
           from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
-          to: toMember.contactDetails.email, // ✔ correct receiver
+          to: toMember.contactDetails.email,
           subject: "Business Closed Update",
           text: mailMessage,
         });
       }
+
+      // --------------------------------------------------
+      // 5️⃣ CREATE NOTIFICATION
+      // --------------------------------------------------
       if (createDto.toMember.toString() !== fromMemberId.toString()) {
         await NotificationController.createNotification(
           "thankyou",
@@ -121,9 +249,7 @@ Grip Forum
       });
     } catch (error) {
       console.error("THANK YOU SLIP ERROR:", error);
-
       if (error instanceof BadRequestError) throw error;
-
       throw new InternalServerError("Failed to create Thank You Slip record");
     }
   }
@@ -134,7 +260,13 @@ Grip Forum
     @Res() res: Response,
     @Req() req: Request
   ) {
-    const { search, sortField = "createdAt", sortOrder = "desc", fromDate, toDate } = queryParams;
+    const {
+      search,
+      sortField = "createdAt",
+      sortOrder = "desc",
+      fromDate,
+      toDate,
+    } = queryParams;
     const page = queryParams.page ?? 1;
     const limit = queryParams.limit ?? 100;
     const skip = (page - 1) * limit;
@@ -195,7 +327,13 @@ Grip Forum
     @Res() res: Response,
     @Req() req: Request
   ) {
-    const { search, sortField = "createdAt", sortOrder = "desc", fromDate, toDate } = queryParams;
+    const {
+      search,
+      sortField = "createdAt",
+      sortOrder = "desc",
+      fromDate,
+      toDate,
+    } = queryParams;
     const page = queryParams.page ?? 1;
     const limit = queryParams.limit ?? 100;
     const skip = (page - 1) * limit;
@@ -254,7 +392,7 @@ Grip Forum
   async listGivenThankYouSlipsById(
     @Param("userId") userId: string,
     @QueryParams() queryParams: ListThankYouSlipDto,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     const { search, sortField = "createdAt", sortOrder = "desc" } = queryParams;
     const page = queryParams.page ?? 1;
@@ -375,13 +513,11 @@ Grip Forum
       throw new NotFoundError("Thank You Slip record not found");
     }
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Thank You Slip record fetched successfully",
-        data: record,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Thank You Slip record fetched successfully",
+      data: record,
+    });
   }
 
   @Put("/:id")
@@ -403,13 +539,11 @@ Grip Forum
 
     try {
       const updatedRecord = await record.save();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Thank You Slip updated successfully",
-          data: updatedRecord,
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Thank You Slip updated successfully",
+        data: updatedRecord,
+      });
     } catch (error) {
       throw new InternalServerError("Failed to update Thank You Slip record");
     }
@@ -433,12 +567,10 @@ Grip Forum
 
     try {
       await record.save();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Thank You Slip record deleted successfully",
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Thank You Slip record deleted successfully",
+      });
     } catch (error) {
       throw new InternalServerError("Failed to delete Thank You Slip record");
     }
