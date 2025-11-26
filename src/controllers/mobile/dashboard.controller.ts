@@ -19,196 +19,253 @@ import mongoose from 'mongoose';
 @JsonController('/api/mobile/dashboard')
 @UseBefore(AuthMiddleware)
 export default class DashboardController {
-    @Get('/count-summary')
-    async getCountSummary(@Req() req: Request, @Res() res: Response) {
-        try {
-            const memberId = (req as any).user?.id;
-            if (!memberId) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Unauthorized: No member info found.'
-                });
-            }
+  @Get("/count-summary")
+  async getCountSummary(@Req() req: Request, @Res() res: Response) {
+    try {
+      const memberId = (req as any).user?.id;
+      if (!memberId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized: No member info found.",
+        });
+      }
 
-            // Get filterType from query, default to 'overall'
-            const filterType = (req.query.filterType as string) || 'overall';
+      console.log(req.query.filterType,"filter");
+      
 
-            // Compute date range based on filterType
-            let startDate: Date | null = null;
-            let endDate: Date = new Date(); // current time
-            const now = new Date();
-            if (filterType === 'this-week') {
-                const day = now.getDay(); // 0 (Sun) - 6 (Sat)
-                const diff = now.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
-                startDate = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0, 0);
-            } else if (filterType === 'this-month') {
-                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-            } else if (filterType === '3-months') {
-                startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
-            } else if (filterType === '6-months') {
-                startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
-            } else if (filterType === '12-months') {
-                startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1, 0, 0, 0, 0);
-            } else {
-                startDate = null; // overall
-            }
+      // WEEKDAY COMES FROM QUERY (monday/tuesday/wednesday...)
+      const weekday = (req.query.weekday as string || "monday").toLowerCase();
 
-            // Build date filter for Mongo queries
-            let dateFilter = {};
-            if (startDate) {
-                dateFilter = { createdAt: { $gte: startDate, $lte: endDate } };
-            }
+      // Convert weekday → number
+      const weekdayMap: Record<string, number> = {
+        sunday: 0,
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        saturday: 6,
+      };
+      const meetingDay = weekdayMap[weekday] ?? 1; // default Monday
 
-            // Build status filter for specific timeframes
-            let statusFilter = {};
-            if (['this-month', '3-months', '6-months', '12-months'].includes(filterType)) {
-                statusFilter = { status: 'approve' };
-            } else if (filterType === 'overall') {
-                statusFilter = { status: { $ne: 'reject' } };
-            }
+      // FILTER TYPE
+      const filterType = (req.query.filterType as string) || "overall";
 
-            const memberObjectId = new mongoose.Types.ObjectId(memberId);
+      // -----------------------
+      // DATE RANGE FUNCTIONS
+      // -----------------------
+      function getWeekRange(meetingDay: number) {
+        const now = new Date();
+        const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
 
-            const [
-              testimonialGivenCount,
-              referralGivenCount,
-              thankYouGivenAmountResult,
-              thankYouGivenCount,
-              testimonialReceivedCount,
-              referralReceivedCount,
-              thankYouReceivedAmountResult,
-              thankYouReceivedCount,
-              visitorCount,
-              expectedVisitorCount,
-              oneToOneCount,
-            ] = await Promise.all([
-              TestimonialSlip.countDocuments({
-                fromMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              ReferralSlipModel.countDocuments({
-                fromMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              ThankYouSlip.aggregate([
-                {
-                  $match: {
-                    fromMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...(startDate
-                      ? { createdAt: { $gte: startDate, $lte: endDate } }
-                      : {}),
-                    ...statusFilter,
-                  },
-                },
-                {
-                  $group: {
-                    _id: null,
-                    total: { $sum: "$amount" },
-                  },
-                },
-              ]),
-              ThankYouSlip.countDocuments({
-                fromMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              TestimonialSlip.countDocuments({
-                toMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              ReferralSlipModel.countDocuments({
-                toMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              ThankYouSlip.aggregate([
-                {
-                  $match: {
-                    toMember: memberObjectId,
-                    isActive: 1,
-                    isDelete: 0,
-                    ...(startDate
-                      ? { createdAt: { $gte: startDate, $lte: endDate } }
-                      : {}),
-                    ...statusFilter,
-                  },
-                },
-                {
-                  $group: {
-                    _id: null,
-                    total: { $sum: "$amount" },
-                  },
-                },
-              ]),
-              ThankYouSlip.countDocuments({
-                fromMember: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              Visitor.countDocuments({
-                invitedBy: memberObjectId,
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              ExpectedVisitor.countDocuments({
-                invitedBy: memberObjectId,
-                isActive: 1,
-                isDelete: 0, // ONLY ACTIVE VISITORS COUNTED
-                ...dateFilter,
-                ...statusFilter,
-              }),
-              OneToOne.countDocuments({
-                $or: [
-                  { fromMember: memberObjectId },
-                  { toMember: memberObjectId },
-                ],
-                isActive: 1,
-                isDelete: 0,
-                ...dateFilter,
-                ...statusFilter,
-              }),
-            ]);
-            const thankYouGivenAmount = thankYouGivenAmountResult[0]?.total || 0;
-            const thankYouReceivedAmount = thankYouReceivedAmountResult[0]?.total || 0;
+        // Calculate difference to the start of the week
+        let diff = meetingDay - currentDay;
+        const start = new Date(now);
+        start.setDate(now.getDate() + diff); // go to the selected weekday
+        start.setHours(0, 0, 0, 0); // start of day
 
-            return res.json({
-                data: {
-                    testimonialGivenCount,
-                    referralGivenCount,
-                    thankYouGivenAmount,
-                    thankYouGivenCount,
-                    testimonialReceivedCount,
-                    referralReceivedCount,
-                    thankYouReceivedAmount,
-                    thankYouReceivedCount,
-                    visitorCount,
-                    expectedVisitorCount,
-                    oneToOneCount
-                }
-            });
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6); // full 7-day week
+        end.setHours(23, 59, 59, 999); // end of day
 
-        } catch (error) {
-            console.error('Dashboard error:', error);
-            throw new InternalServerError('Failed to fetch dashboard summary');
-        }
+        return { start, end };
+      }
+
+      // MONTH RANGE: start = first day of month, end = last day of current month
+      function getMonthRange(monthsBack: number) {
+        const now = new Date();
+
+        // Start = first day of month N months ago at 00:00 UTC
+        const start = new Date(Date.UTC(
+          now.getFullYear(),
+          now.getMonth() - (monthsBack - 1),
+          1,
+          0, 0, 0, 0
+        ));
+
+        // End = last day of current month at 23:59:59.999 UTC
+        const end = new Date(Date.UTC(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23, 59, 59, 999
+        ));
+        console.log(start, end)
+
+        return { start, end };
+      }
+
+      // -----------------------
+      // APPLY FILTER TYPE
+      // -----------------------
+      let startDate: Date | null = null;
+      let endDate: Date = new Date();
+
+      if (filterType === "this-week") {
+        const r = getWeekRange(meetingDay);
+        startDate = r.start;
+        endDate = r.end;
+      } else if (filterType === "this-month") {
+        const r = getMonthRange(1);
+        startDate = r.start;
+        endDate = r.end;
+      } else if (filterType === "3-months") {
+        const r = getMonthRange(3);
+        startDate = r.start;
+        endDate = r.end;
+      } else if (filterType === "6-months") {
+        const r = getMonthRange(6);
+        startDate = r.start;
+        endDate = r.end;
+      } else if (filterType === "12-months") {
+        const r = getMonthRange(12);
+        startDate = r.start;
+        endDate = r.end;
+      } else {
+        startDate = null; // overall
+      }
+
+      // Build Mongo date filter
+      const dateFilter = startDate
+        ? { createdAt: { $gte: startDate, $lte: endDate } }
+        : {};
+
+      // Status logic
+      let statusFilter = {};
+      if (["this-month", "3-months", "6-months", "12-months"].includes(filterType)) {
+        statusFilter = {};
+      } else if (filterType === "overall") {
+        statusFilter = { status: { $ne: "reject" } };
+      }
+
+      const memberObjectId = new mongoose.Types.ObjectId(memberId);
+
+      // --------------------------------
+      //          QUERY SECTION
+      // --------------------------------
+      const [
+        testimonialGivenCount,
+        referralGivenCount,
+        thankYouGivenAmountResult,
+        thankYouGivenCount,
+        testimonialReceivedCount,
+        referralReceivedCount,
+        thankYouReceivedAmountResult,
+        thankYouReceivedCount,
+        visitorCount,
+        expectedVisitorCount,
+        oneToOneCount,
+      ] = await Promise.all([
+        TestimonialSlip.countDocuments({
+          fromMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        ReferralSlipModel.countDocuments({
+          fromMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        ThankYouSlip.aggregate([
+          {
+            $match: {
+              fromMember: memberObjectId,
+              isActive: 1,
+              isDelete: 0,
+              ...dateFilter,
+              ...statusFilter,
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+        ThankYouSlip.countDocuments({
+          fromMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        TestimonialSlip.countDocuments({
+          toMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        ReferralSlipModel.countDocuments({
+          toMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        ThankYouSlip.aggregate([
+          {
+            $match: {
+              toMember: memberObjectId,
+              isActive: 1,
+              isDelete: 0,
+              ...dateFilter,
+              ...statusFilter,
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+        ThankYouSlip.countDocuments({
+          fromMember: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        Visitor.countDocuments({
+          invitedBy: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        ExpectedVisitor.countDocuments({
+          invitedBy: memberObjectId,
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+        OneToOne.countDocuments({
+          $or: [{ fromMember: memberObjectId }, { toMember: memberObjectId }],
+          isActive: 1,
+          isDelete: 0,
+          ...dateFilter,
+          ...statusFilter,
+        }),
+      ]);
+
+      const thankYouGivenAmount = thankYouGivenAmountResult[0]?.total || 0;
+      const thankYouReceivedAmount = thankYouReceivedAmountResult[0]?.total || 0;
+
+      return res.json({
+        data: {
+          testimonialGivenCount,
+          referralGivenCount,
+          thankYouGivenAmount,
+          thankYouGivenCount,
+          testimonialReceivedCount,
+          referralReceivedCount,
+          thankYouReceivedAmount,
+          thankYouReceivedCount,
+          visitorCount,
+          expectedVisitorCount,
+          oneToOneCount,
+        },
+      });
+    } catch (error) {
+      console.error("Dashboard error:", error);
+      throw new InternalServerError("Failed to fetch dashboard summary");
     }
+  }
 }
