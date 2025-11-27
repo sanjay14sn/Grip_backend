@@ -900,12 +900,12 @@ export default class MemberController {
   @Post("/meetings-attendance-count")
   async getMembersAttendanceCount(
     @Req() req: Request,
-    @Body() body: { memberIds: string[] | string },
+    @Body() body: { members: any[] | string },
     @Res() res: Response
   ) {
-    let { memberIds } = body;
+    let { members } = body;
     // --- NEW: handle "fromUser" ---
-    if (memberIds === "fromUser") {
+    if (members === "fromUser") {
       const currentUserId = (req as any).user?.id;
       if (!currentUserId) {
         return res.status(400).json({
@@ -913,15 +913,15 @@ export default class MemberController {
           message: "Current user ID not found in token",
         });
       }
-      memberIds = [currentUserId]; // <-- normalize to array
+      members = [currentUserId]; // <-- normalize to array
     }
 
     // --- IF SINGLE STRING, CONVERT TO ARRAY ---
-    if (typeof memberIds === "string") {
-      memberIds = [memberIds];
+    if (typeof members === "string") {
+      members = [members];
     }
 
-    if (!memberIds || memberIds.length === 0) {
+    if (!members || members.length === 0) {
       return res.status(400).json({
         success: false,
         message: "memberIds are required",
@@ -930,31 +930,72 @@ export default class MemberController {
 
 
     try {
-      const objIds = memberIds.map(id => new mongoose.Types.ObjectId(id));
+      /* --------------------------------------------------
+               1️⃣ Create ObjectId list
+            -------------------------------------------------- */
+      const memberObjIds = members.map(id => new mongoose.Types.ObjectId(id));
 
       /* --------------------------------------------------
-          1) GET attendance for meeting/event/training
-         -------------------------------------------------- */
-      const attendanceCounts = await Attendance.aggregate([
+         2️⃣ AGGREGATE ATTENDANCE
+         Meeting → only after member joined
+         Event/Training → always
+      -------------------------------------------------- */
+      const attendance = await Attendance.aggregate([
         {
-          $match: { memberId: { $in: objIds }, isDelete: 0 }
+          $match: {
+            memberId: { $in: memberObjIds },
+            isDelete: 0
+          }
         },
+
+        // Join member (for createdAt)
+        {
+          $lookup: {
+            from: "members",
+            localField: "memberId",
+            foreignField: "_id",
+            as: "member"
+          }
+        },
+        { $unwind: "$member" },
+
+        // Join payments (purpose + startDate)
         {
           $lookup: {
             from: "payments",
             localField: "meetingId",
-            foreignField: "_id", // 🔹 fixed
-            as: "paymentData"
+            foreignField: "_id",
+            as: "payment"
           }
         },
-        { $unwind: { path: "$paymentData", preserveNullAndEmptyArrays: true } },
+        { $unwind: "$payment" },
+
         {
           $addFields: {
-            purpose: {
-              $toLower: { $ifNull: ["$paymentData.purpose", "meeting"] }
+            purpose: { $toLower: "$payment.purpose" },
+            meetingDate: { $toDate: "$payment.startDate" },
+            joinedDate: { $toDate: "$member.createdAt" }
+          }
+        },
+
+        // Apply meeting filter
+        {
+          $match: {
+            $expr: {
+              $or: [
+                { $ne: ["$purpose", "meeting"] }, // event/training always allowed
+                {
+                  $and: [
+                    { $eq: ["$purpose", "meeting"] },
+                    { $gt: ["$meetingDate", "$joinedDate"] }
+                  ]
+                }
+              ]
             }
           }
         },
+
+        // group PALMS + meetingCount
         {
           $group: {
             _id: { memberId: "$memberId", purpose: "$purpose" },
@@ -962,42 +1003,50 @@ export default class MemberController {
             absent: { $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] } },
             late: { $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] } },
             managed: { $sum: { $cond: [{ $eq: ["$status", "medical"] }, 1, 0] } },
-            substitute: { $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] } }
+            substitute: { $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] } },
+            meetingCount: {
+              $sum: { $cond: [{ $eq: ["$purpose", "meeting"] }, 1, 0] }
+            }
           }
         }
       ]);
 
       /* --------------------------------------------------
-          2) Prepare final result structure
-         -------------------------------------------------- */
+         3️⃣ Prepare final result
+      -------------------------------------------------- */
       const result: any = {};
-
-      memberIds.forEach(id => {
+      members.forEach(id => {
         result[id] = {
-          meeting: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          meeting: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0, totalMeetings: 0 },
           event: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
           training: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 }
         };
       });
 
-      /* --------------------------------------------------
-          3) Insert attendance into result
-         -------------------------------------------------- */
-      attendanceCounts.forEach(row => {
+      attendance.forEach(row => {
         const memberId = row._id.memberId.toString();
-        const purpose = row._id.purpose.toLowerCase(); // meeting, event, training
+        const purpose = row._id.purpose;
 
-        if (!result[memberId][purpose]) return;
+        if (!result[memberId]) return;
 
         result[memberId][purpose] = {
+          ...result[memberId][purpose],
           present: row.present,
           absent: row.absent,
           late: row.late,
           managed: row.managed,
           substitute: row.substitute
         };
+
+        // Set total meetings (meetingCount)
+        if (purpose === "meeting") {
+          result[memberId].meeting.totalMeetings = row.meetingCount;
+        }
       });
 
+      /* --------------------------------------------------
+         4️⃣ RESPONSE
+      -------------------------------------------------- */
       return res.status(200).json({
         success: true,
         data: result

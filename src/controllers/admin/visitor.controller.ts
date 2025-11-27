@@ -124,130 +124,131 @@ export default class VisitorController {
 
 
     @Get("/member/list/:id")
-    async listThankyouSlipMembers(
+    async listVisitorMembers(
         @Param("id") id: string,
         @Req() req: Request,
         @QueryParams() queryParams: ListVisitorDto,
         @Res() res: Response
     ) {
-        // const { page = 1, limit = 10, sortField = 'createdAt', sortOrder = 'desc' } = queryParams;
-        // const skip = (page - 1) * limit;
-
         try {
-            // Verify chapter exists
+            const {
+                page = 1,
+                limit = 10,
+                sortField = "createdAt",
+                sortOrder = "desc",
+            } = queryParams;
+
+            const skip = (page - 1) * limit;
+
+            /** -------------------------
+             *  VERIFY CHAPTER EXISTS
+             * ------------------------- */
             const chapter = await Chapter.findOne({
                 _id: id,
-                isDelete: 0
+                isDelete: 0,
             })
-                .populate('zoneId', 'zoneName')
-                .populate('cidId', 'name email');
+                .populate("zoneId", "zoneName")
+                .populate("cidId", "name email");
 
             if (!chapter) {
                 return res.status(404).json({
                     success: false,
-                    message: 'Chapter not found'
+                    message: "Chapter not found",
                 });
             }
 
-            // Get all members in this chapter
+            /** -------------------------
+             *  FETCH MEMBER LIST
+             * ------------------------- */
             const members = await Member.find({
-                'chapterInfo.chapterId': id,
+                "chapterInfo.chapterId": id,
                 isActive: 1,
-                isDelete: 0
+                isDelete: 0,
             }).lean();
 
-            // Create array of member IDs for querying
-            const memberIds = members.map(member => member._id);
+            const memberIds = members.map((m) => m._id);
 
-            // Define interfaces for populated members
-            interface PopulatedMember {
-                _id: mongoose.Types.ObjectId;
-                personalDetails?: {
-                    firstName?: string;
-                    lastName?: string;
-                    profileImage?: {
-                        docName: string;
-                        docPath: string;
-                        originalName: string;
-                    };
-                };
-                contactDetails?: {
-                    mobileNumber?: string;
-                };
-            }
-
-            // Query for One-to-One records involving these members
+            /** -------------------------
+             *  BUILD QUERY
+             * ------------------------- */
             const query: FilterQuery<IVisitor> = {
                 isDelete: 0,
-                $or: [
-                    { invitedBy: { $in: memberIds } },
-                ]
+                invitedBy: { $in: memberIds },
             };
 
+            /** -------------------------
+             *  FETCH RECORDS + COUNT
+             * ------------------------- */
             const [records, total] = await Promise.all([
                 Visitor.find(query)
-                    .populate<{ invitedBy: PopulatedMember }>('invitedBy', 'personalDetails contactDetails')
-                    // .populate<{ toMember: PopulatedMember }>('toMember', 'personalDetails contactDetails')
-                    .sort({ createdAt: -1 })
-                    // .skip(skip)
-                    // .limit(limit)
+                    .populate("invitedBy", "personalDetails contactDetails")
+                    .sort({ [sortField]: sortOrder === "asc" ? 1 : -1 })
+                    .skip(skip)
+                    .limit(limit)
                     .lean(),
-                Visitor.countDocuments(query)
+                Visitor.countDocuments(query),
             ]);
 
-            // Format the response data
-            const formattedRecords = records.map(record => ({
-                _id: record._id,
-                name: record.name,
-                company: record.company,
-                category: record.category,
-                mobile: record.mobile,
-                email: record.email,
-                address: record.address,
-                visitDate: record.visitDate,
-                status: record.status,
-                // NEW FIELDS ADDED HERE
-                chapter: record.chapter,
-                chapterId: record.chapterId,
-                chapter_directory_name: record.chapter_directory_name,
-                invited_by_member: record.invited_by_member,
-                invited_from: record.invited_from,
-                zone: record.zone,
-                zoneId: record.zoneId,
-                // invitedBy: record.invitedBy,
-                // Image: record.invitedBy.personalDetails?.profileImage || "",
-                invite: {
-                    id: record.invitedBy?._id,
-                    name: `${record.invitedBy.personalDetails?.firstName || ''} ${record.invitedBy.personalDetails?.lastName || ''}`.trim(),
-                    mobile: record.invitedBy.contactDetails?.mobileNumber || '',
-                    profileImage: record.invitedBy.personalDetails?.profileImage || {
-                        docName: '',
-                        docPath: '',
-                        originalName: ''
-                    }
-                },
-                createdAt: record.createdAt
-            }));
+            /** -------------------------
+             *  FORMAT OUTPUT
+             * ------------------------- */
+            const formattedRecords = records.map((record) => {
+                const invited = record.invitedBy as any;
 
+                return {
+                    _id: record._id,
+                    name: record.name,
+                    company: record.company,
+                    category: record.category,
+                    mobile: record.mobile,
+                    email: record.email,
+                    address: record.address,
+                    visitDate: record.visitDate,
+                    status: record.status,
+
+                    chapter: record.chapter,
+                    chapterId: record.chapterId,
+                    chapter_directory_name: record.chapter_directory_name,
+                    zone: record.zone,
+                    zoneId: record.zoneId,
+
+                    invite: {
+                        id: invited?._id || null,
+                        name: invited
+                            ? `${invited.personalDetails?.firstName || ""} ${invited.personalDetails?.lastName || ""
+                                }`.trim()
+                            : "",
+                        mobile: invited?.contactDetails?.mobileNumber || "",
+                        profileImage:
+                            invited?.personalDetails?.profileImage || null,
+                    },
+
+                    createdAt: record.createdAt,
+                };
+            });
+
+            /** -------------------------
+             *  SEND RESPONSE
+             * ------------------------- */
             return res.status(200).json({
                 success: true,
-                message: 'Visitor members records fetched successfully',
+                message: "Visitor members records fetched successfully",
                 data: {
                     chapter: {
                         _id: chapter._id,
                         chapterName: chapter.chapterName,
                         zoneName: (chapter.zoneId as any)?.zoneName,
                         cidName: (chapter.cidId as any)?.name,
-                        memberCount: members.length
+                        memberCount: members.length,
                     },
                     records: formattedRecords,
                     pagination: {
                         total,
-                        // page,
-                        // limit,
-                        // totalPages: Math.ceil(total / limit)
-                    }
-                }
+                        page,
+                        limit,
+                        totalPages: Math.ceil(total / limit),
+                    },
+                },
             });
         } catch (error) {
             console.error("Error fetching Visitor records:", error);

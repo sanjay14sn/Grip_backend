@@ -142,11 +142,21 @@ export default class ThankYouSlipController {
         @QueryParams() queryParams: ListThankYouSlipDto,
         @Res() res: Response
     ) {
-        // const { page = 1, limit = 10, sortField = 'createdAt', sortOrder = 'desc' } = queryParams;
-        // const skip = (page - 1) * limit;
-
         try {
-            // Verify chapter exists
+            // -------------------------
+            // SAFE NUMERIC PAGINATION
+            // -------------------------
+            const page = Number(queryParams?.page ?? 1);
+            const limit = Number(queryParams?.limit ?? 10);
+
+            const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+            const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
+
+            const skip = (safePage - 1) * safeLimit;
+
+            // -------------------------
+            // VERIFY CHAPTER EXISTS
+            // -------------------------
             const chapter = await Chapter.findOne({
                 _id: id,
                 isDelete: 0
@@ -157,38 +167,43 @@ export default class ThankYouSlipController {
             if (!chapter) {
                 return res.status(404).json({
                     success: false,
-                    message: 'Chapter not found'
+                    message: "Chapter not found"
                 });
             }
 
-            // Get all members in this chapter
+            // -------------------------
+            // GET ALL MEMBERS IN CHAPTER
+            // -------------------------
             const members = await Member.find({
-                'chapterInfo.chapterId': id,
+                "chapterInfo.chapterId": id,
                 isActive: 1,
                 isDelete: 0
             }).lean();
 
-            // Create array of member IDs for querying
-            const memberIds = members.map(member => member._id);
+            const memberIds = members.map(m => m._id);
 
-            // Define interfaces for populated members
+            // -------------------------
+            // POPULATED MEMBER INTERFACE
+            // -------------------------
             interface PopulatedMember {
-                _id: mongoose.Types.ObjectId;
+                _id: mongoose.Types.ObjectId | string;
                 personalDetails?: {
                     firstName?: string;
                     lastName?: string;
                     profileImage?: {
-                        docName: string;
-                        docPath: string;
-                        originalName: string;
-                    };
+                        docName?: string;
+                        docPath?: string;
+                        originalName?: string;
+                    } | null;
                 };
                 contactDetails?: {
                     mobileNumber?: string;
                 };
             }
 
-            // Query for One-to-One records involving these members
+            // -------------------------
+            // QUERY OBJECT
+            // -------------------------
             const query: FilterQuery<IThankYouSlip> = {
                 isDelete: 0,
                 $or: [
@@ -197,45 +212,81 @@ export default class ThankYouSlipController {
                 ]
             };
 
+            // -------------------------
+            // FETCH RECORDS + COUNT
+            // -------------------------
+            type ThankYouSlipLean = {
+                _id: mongoose.Types.ObjectId | string;
+                comments?: string;
+                amount?: number;
+                fromMember?: PopulatedMember | null;
+                toMember?: PopulatedMember | null;
+                createdAt?: Date;
+                status?: string;
+            };
+
             const [records, total] = await Promise.all([
                 ThankYouSlip.find(query)
-                    .populate<{ fromMember: PopulatedMember }>('fromMember', 'personalDetails contactDetails')
-                    .populate<{ toMember: PopulatedMember }>('toMember', 'personalDetails contactDetails')
+                    .populate<{ fromMember: PopulatedMember }>(
+                        "fromMember",
+                        "personalDetails contactDetails"
+                    )
+                    .populate<{ toMember: PopulatedMember }>(
+                        "toMember",
+                        "personalDetails contactDetails"
+                    )
                     .sort({ createdAt: -1 })
-                    // .skip(skip)
-                    // .limit(limit)
-                    .lean(),
+                    .skip(skip)
+                    .limit(safeLimit)
+                    .lean<ThankYouSlipLean[]>(),
+
                 ThankYouSlip.countDocuments(query)
             ]);
 
-            // Format the response data
-            const formattedRecords = records.map(record => ({
-                _id: record._id,
-                // whereDidYouMeet: record.whereDidYouMeet,
-                // date: record.date,
-                comments: record.comments,
-                amount: record.amount,
-                fromMember: {
-                    id: record.fromMember?._id,
-                    name: record.fromMember ?
-                        `${record.fromMember.personalDetails?.firstName || ''} ${record.fromMember.personalDetails?.lastName || ''}`.trim() : '',
-                    mobile: record.fromMember?.contactDetails?.mobileNumber || '',
-                    profileImage: record.fromMember?.personalDetails?.profileImage || null
-                },
-                toMember: {
-                    id: record.toMember?._id,
-                    name: record.toMember ?
-                        `${record.toMember.personalDetails?.firstName || ''} ${record.toMember.personalDetails?.lastName || ''}`.trim() : '',
-                    mobile: record.toMember?.contactDetails?.mobileNumber || '',
-                    profileImage: record.toMember?.personalDetails?.profileImage || null
-                },
-                createdAt: record.createdAt,
-                status: record.status
-            }));
+            // -------------------------
+            // FORMAT OUTPUT
+            // -------------------------
+            const formattedRecords = records.map(record => {
+                const from = record.fromMember || null;
+                const to = record.toMember || null;
+
+                const fromName = from
+                    ? `${from.personalDetails?.firstName || ''} ${from.personalDetails?.lastName || ''}`.trim()
+                    : "";
+
+                const toName = to
+                    ? `${to.personalDetails?.firstName || ''} ${to.personalDetails?.lastName || ''}`.trim()
+                    : "";
+
+                return {
+                    _id: record._id,
+                    comments: record.comments,
+                    amount: record.amount,
+                    fromMember: {
+                        id: from?._id ?? null,
+                        name: fromName,
+                        mobile: from?.contactDetails?.mobileNumber ?? "",
+                        profileImage: from?.personalDetails?.profileImage ?? null
+                    },
+                    toMember: {
+                        id: to?._id ?? null,
+                        name: toName,
+                        mobile: to?.contactDetails?.mobileNumber ?? "",
+                        profileImage: to?.personalDetails?.profileImage ?? null
+                    },
+                    createdAt: record.createdAt,
+                    status: record.status
+                };
+            });
+
+            const totalPages = Math.max(
+                1,
+                Math.ceil(total / (safeLimit || 1))
+            );
 
             return res.status(200).json({
                 success: true,
-                message: 'ThankYouSlip members records fetched successfully',
+                message: "ThankYouSlip members records fetched successfully",
                 data: {
                     chapter: {
                         _id: chapter._id,
@@ -247,17 +298,20 @@ export default class ThankYouSlipController {
                     records: formattedRecords,
                     pagination: {
                         total,
-                        // page,
-                        // limit,
-                        // totalPages: Math.ceil(total / limit)
+                        page: safePage,
+                        limit: safeLimit,
+                        totalPages
                     }
                 }
             });
+
         } catch (error) {
             console.error("Error fetching ThankYouSlip records:", error);
             throw new InternalServerError("Failed to fetch ThankYouSlip records");
         }
     }
+
+
     @Get("/monthlyThankyouslipByChapter/:chapterId")
     async getMonthlyThankYouAmount(
         @Param("chapterId") chapterId: string,

@@ -15,6 +15,7 @@ import { OneToOne } from '../../models/onetoone.model';
 import { ExpectedVisitor } from '../../models/expectedvisitors.model';
 import { ReferralSlipModel } from '../../models/referralslip.model';
 import mongoose from 'mongoose';
+import { Chapter } from '../../models/chapter.model';
 
 @JsonController('/api/mobile/dashboard')
 @UseBefore(AuthMiddleware)
@@ -34,8 +35,15 @@ export default class DashboardController {
       
 
       // WEEKDAY COMES FROM QUERY (monday/tuesday/wednesday...)
-      const weekday = (req.query.weekday as string || "monday").toLowerCase();
+      const chapterId = req.query.chapterId as string;
 
+      const chapter = await Chapter.findById(chapterId).lean();
+
+      if (!chapter) {
+        return res.status(404).json({ success: false, message: "Invalid chapterId" });
+      }
+
+      const weekday = (chapter.weekday || "monday").toLowerCase();
       // Convert weekday → number
       const weekdayMap: Record<string, number> = {
         sunday: 0,

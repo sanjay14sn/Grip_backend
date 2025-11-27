@@ -141,11 +141,17 @@ export default class ReferralSlipController {
         @QueryParams() queryParams: ListReferralSlipDto,
         @Res() res: Response
     ) {
-        // const { page = 1, limit = 10, sortField = 'createdAt', sortOrder = 'desc' } = queryParams;
-        // const skip = (page - 1) * limit;
-
         try {
-            // Verify chapter exists
+            // --- Ensure page and limit are numbers (avoid string | number unions) ---
+            const page = Number(queryParams?.page ?? 1);
+            const limit = Number(queryParams?.limit ?? 10);
+
+            // sanitize
+            const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+            const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
+            const skip = Math.max(0, (safePage - 1) * safeLimit);
+
+            // --- verify chapter exists ---
             const chapter = await Chapter.findOne({
                 _id: id,
                 isDelete: 0
@@ -160,34 +166,16 @@ export default class ReferralSlipController {
                 });
             }
 
-            // Get all members in this chapter
+            // --- get all members in chapter (lean for performance) ---
             const members = await Member.find({
                 'chapterInfo.chapterId': id,
                 isActive: 1,
                 isDelete: 0
             }).lean();
 
-            // Create array of member IDs for querying
             const memberIds = members.map(member => member._id);
 
-            // Define interfaces for populated members
-            interface PopulatedMember {
-                _id: mongoose.Types.ObjectId;
-                personalDetails?: {
-                    firstName?: string;
-                    lastName?: string;
-                    profileImage?: {
-                        docName: string;
-                        docPath: string;
-                        originalName: string;
-                    };
-                };
-                contactDetails?: {
-                    mobileNumber?: string;
-                };
-            }
-
-            // Query for One-to-One records involving these members
+            // --- prepare query for referral slips ---
             const query: FilterQuery<IReferralSlip> = {
                 isDelete: 0,
                 $or: [
@@ -196,41 +184,79 @@ export default class ReferralSlipController {
                 ]
             };
 
+            // --- types for populated member shape so TS knows the fields exist after populate ---
+            interface PopulatedMember {
+                _id: mongoose.Types.ObjectId | string;
+                personalDetails?: {
+                    firstName?: string;
+                    lastName?: string;
+                    profileImage?: {
+                        docName?: string;
+                        docPath?: string;
+                        originalName?: string;
+                    } | null;
+                };
+                contactDetails?: {
+                    mobileNumber?: string;
+                };
+            }
+
+            type ReferralSlipLean = {
+                _id: mongoose.Types.ObjectId | string;
+                referalDetail?: any;
+                fromMember?: PopulatedMember | mongoose.Types.ObjectId | null;
+                toMember?: PopulatedMember | mongoose.Types.ObjectId | null;
+                createdAt?: Date;
+                status?: string;
+            };
+
+            // --- fetch paginated records + total count in parallel ---
             const [records, total] = await Promise.all([
                 ReferralSlipModel.find(query)
                     .populate<{ fromMember: PopulatedMember }>('fromMember', 'personalDetails contactDetails')
                     .populate<{ toMember: PopulatedMember }>('toMember', 'personalDetails contactDetails')
                     .sort({ createdAt: -1 })
-                    // .skip(skip)
-                    // .limit(limit)
-                    .lean(),
+                    .skip(skip)
+                    .limit(safeLimit)
+                    .lean<ReferralSlipLean[]>(),
                 ReferralSlipModel.countDocuments(query)
             ]);
 
-            // Format the response data
-            const formattedRecords = records.map(record => ({
-                _id: record._id,
-                // whereDidYouMeet: record.whereDidYouMeet,
-                // date: record.date,
-                referalDetails: record.referalDetail,
-                // images: record.images,
-                fromMember: {
-                    id: record.fromMember?._id,
-                    name: record.fromMember ?
-                        `${record.fromMember.personalDetails?.firstName || ''} ${record.fromMember.personalDetails?.lastName || ''}`.trim() : '',
-                    mobile: record.fromMember?.contactDetails?.mobileNumber || '',
-                    profileImage: record.fromMember?.personalDetails?.profileImage || null
-                },
-                toMember: {
-                    id: record.toMember?._id,
-                    name: record.toMember ?
-                        `${record.toMember.personalDetails?.firstName || ''} ${record.toMember.personalDetails?.lastName || ''}`.trim() : '',
-                    mobile: record.toMember?.contactDetails?.mobileNumber || '',
-                    profileImage: record.toMember?.personalDetails?.profileImage || null
-                },
-                createdAt: record.createdAt,
-                status: record.status
-            }));
+            // --- format results safely (handle case where member wasn't populated) ---
+            const formattedRecords = (records || []).map(record => {
+                const from = record.fromMember as PopulatedMember | undefined | null;
+                const to = record.toMember as PopulatedMember | undefined | null;
+
+                const fromName = from
+                    ? `${(from.personalDetails?.firstName || '').trim()} ${(from.personalDetails?.lastName || '').trim()}`.trim()
+                    : '';
+
+                const toName = to
+                    ? `${(to.personalDetails?.firstName || '').trim()} ${(to.personalDetails?.lastName || '').trim()}`.trim()
+                    : '';
+
+                return {
+                    _id: record._id,
+                    referalDetails: record.referalDetail,
+                    fromMember: {
+                        id: from?._id ?? null,
+                        name: fromName,
+                        mobile: from?.contactDetails?.mobileNumber ?? '',
+                        profileImage: from?.personalDetails?.profileImage ?? null
+                    },
+                    toMember: {
+                        id: to?._id ?? null,
+                        name: toName,
+                        mobile: to?.contactDetails?.mobileNumber ?? '',
+                        profileImage: to?.personalDetails?.profileImage ?? null
+                    },
+                    createdAt: record.createdAt,
+                    status: record.status
+                };
+            });
+
+            // --- safe totalPages calculation (avoid division by zero) ---
+            const totalPages = Math.max(1, Math.ceil(total / (safeLimit || 1)));
 
             return res.status(200).json({
                 success: true,
@@ -246,12 +272,13 @@ export default class ReferralSlipController {
                     records: formattedRecords,
                     pagination: {
                         total,
-                        // page,
-                        // limit,
-                        // totalPages: Math.ceil(total / limit)
+                        page: safePage,
+                        limit: safeLimit,
+                        totalPages
                     }
                 }
             });
+
         } catch (error) {
             console.error("Error fetching ReferralSlip records:", error);
             throw new InternalServerError("Failed to fetch ReferralSlip records");

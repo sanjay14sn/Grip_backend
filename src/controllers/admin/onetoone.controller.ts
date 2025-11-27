@@ -271,6 +271,7 @@ export default class OneToOneController {
             throw new InternalServerError("Failed to fetch One-to-One records");
         }
     }
+    
     @Patch('/status/:id')
     async updateStatus(
         @Param('id') id: string,

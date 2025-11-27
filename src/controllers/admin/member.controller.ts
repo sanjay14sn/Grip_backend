@@ -670,6 +670,7 @@ export default class MemberController {
 
     const match: any = {
       isDelete: 0,
+      "status": "active",
       "chapterInfo.chapterId": { $in: meeting.chapterId },
     };
 
