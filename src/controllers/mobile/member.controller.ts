@@ -35,7 +35,6 @@ import { TestimonialSlip } from "../../models/testimonialslip.model";
 import { Attendance } from "../../models/attendance.model";
 
 @JsonController("/api/mobile/members")
-@UseBefore(AuthMiddleware)
 export default class MemberController {
   @Get("/by-chapter/:chapterId")
   async getMembersByChapterId(

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import {
     JsonController,
     Post,
@@ -26,7 +26,6 @@ import PDFDocument from "pdfkit"; // For generating PDF
 import streamBuffers from "stream-buffers"; // To send PDF as buffer
 
 @JsonController('/api/mobile/visitors')
-@UseBefore(AuthMiddleware)
 export default class VisitorController {
     @Post('/')
     async createVisitor(
@@ -35,28 +34,45 @@ export default class VisitorController {
         @Req() req: Request
     ) {
         try {
+            // Convert invitedBy to ObjectId OR set null
+            let invitedBy: Types.ObjectId | null = null;
+
+            if (createDto.invitedBy && Types.ObjectId.isValid(createDto?.invitedBy)) {
+                invitedBy = new Types.ObjectId(createDto.invitedBy);
+            }
+
             const visitor = new Visitor({
                 ...createDto,
 
-                // Default metadata
                 isActive: 1,
                 isDelete: 0,
-                status: 'approve',
+                status: "approve",
                 createdAt: new Date(),
                 updatedAt: new Date(),
 
-                // Who created the form (admin / logged-in user)
-                createdBy: (req as any)?.user?.id || null,
-
-                // IMPORTANT: Who actually invited the visitor (member ID from frontend)
-                invitedBy: createDto.invitedBy || (req as any)?.user?.id || null,
+                createdBy: invitedBy,  // Store properly
+                invitedBy: invitedBy,  // Store properly
             });
 
+            // Try saving visitor
             const savedVisitor = await visitor.save();
 
-            const visitorEmail = savedVisitor.email; // Make sure visitor object has email
+            console.log(savedVisitor,"visitor")
 
-            // ---- Nodemailer Transporter ----
+            // If the DB did NOT create it → STOP
+            if (!savedVisitor || !savedVisitor._id) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Visitor not created. Email not sent.",
+                });
+            }
+
+            const visitorEmail = savedVisitor.email;
+
+            // ----------------------------------
+            // SEND EMAIL ONLY AFTER SAVE SUCCESS
+            // ----------------------------------
+
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
@@ -65,30 +81,22 @@ export default class VisitorController {
                 },
             });
 
-            // -----------------------------
-            // 1️⃣ Thank You Email
-            // -----------------------------
-            const thankYouMessage = `
-Hello ${savedVisitor.name},
-
-Thank you for visiting Grip Forum. We appreciate your time and hope you had a great experience.
-
-Regards,
-Grip Forum Team
-`;
-
+            // Email 1: Thank-you email
             await transporter.sendMail({
                 from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
                 to: visitorEmail,
                 subject: "Thank You for Visiting Grip Forum",
-                text: thankYouMessage,
+                text: `
+Hello ${savedVisitor.name},
+
+Thank you for visiting Grip Forum.
+
+Regards,
+Grip Forum Team
+`,
             });
 
-            // -----------------------------
-            // 2️⃣ Email with PDF
-            // -----------------------------
-            // Generate PDF in memory
-            // Generate PDF in memory
+            // PDF generation
             const doc = new PDFDocument();
             const bufferStream = new streamBuffers.WritableStreamBuffer({
                 initialSize: 1024,
@@ -100,57 +108,47 @@ Grip Forum Team
             doc.fontSize(16).text("Visitor Details", { underline: true });
             doc.moveDown();
             doc.fontSize(12).text(`Name       : ${savedVisitor.name}`);
-            doc.fontSize(12).text(`From       : ${createDto.invited_from}`);
+            doc.text(`From       : ${createDto.invited_from}`);
             doc.text(`Category   : ${savedVisitor.category}`);
             doc.text(`Company    : ${savedVisitor.company}`);
             doc.text(`Mobile     : ${savedVisitor.mobile}`);
-            doc.text(`Invited By : ${savedVisitor.invitedBy}`);
+            savedVisitor?.invitedBy?doc.text(`Invited By : ${savedVisitor?.invitedBy}`):null
             doc.text(`Created At : ${savedVisitor.createdAt.toISOString()}`);
             doc.end();
 
-            const pdfMailMessage = `
-
-Please find attached  visitor details from Grip Forum.
-
-Regards,
-Grip Forum Team
-`;
-
-            // Wait for PDF buffer
             await new Promise<void>((resolve) => bufferStream.on("finish", resolve));
-
-            // Get the buffer safely
             const pdfBuffer = bufferStream.getContents();
-            if (!pdfBuffer) {
-                throw new Error("Failed to generate PDF buffer");
-            }
 
-            // Now send the email
+            if (!pdfBuffer) throw new Error("PDF generation failed");
+
+            // Email 2: PDF send
             await transporter.sendMail({
                 from: `"Grip Forum" <gripbusinessforum@gmail.com>`,
                 to: `"Grip Forum" <gripbusinessforum@gmail.com>`,
                 subject: "Visitor Details",
-                text: pdfMailMessage,
-                attachments: [
-                    {
-                        filename: "VisitorDetails.pdf",
-                        content: pdfBuffer, // ✅ TypeScript now sees this as Buffer
-                    },
-                ],
+                text: `Please find attached visitor details.`,
+                attachments: [{ filename: "VisitorDetails.pdf", content: pdfBuffer }],
             });
-
 
             return res.status(201).json({
                 success: true,
-                message: 'Visitor created successfully',
+                message: "Visitor created & email sent successfully",
                 data: savedVisitor,
             });
+
         } catch (error) {
-            console.error('Error creating visitor:', error);
-            throw new InternalServerError('Failed to create Visitor record');
+            console.error("Error creating visitor:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Failed to create Visitor record",
+                error: error instanceof Error ? error.message : String(error),
+            });
         }
     }
 
+
+    @UseBefore(AuthMiddleware)
     @Get('/list')
     async listVisitors(@QueryParams() queryParams: ListVisitorDto, @Res() res: Response, @Req() req: Request) {
         const page = Number(queryParams.page) || 1;
@@ -327,6 +325,7 @@ Grip Forum Team
         return res.status(200).json({ success: true, message: 'Visitor record fetched successfully', data: record });
     }
 
+    @UseBefore(AuthMiddleware)
     @Put('/:id')
     async updateVisitor(@Param('id') id: string, @Body() body: Partial<CreateVisitorDto>, @Res() res: Response, @Req() req: Request) {
         const record = await Visitor.findOne({ _id: id, isDelete: 0 });
@@ -347,6 +346,7 @@ Grip Forum Team
         }
     }
 
+    @UseBefore(AuthMiddleware)
     @Delete('/:id')
     async deleteVisitor(@Param('id') id: string, @Res() res: Response, @Req() req: Request) {
         const record = await Visitor.findById(id);

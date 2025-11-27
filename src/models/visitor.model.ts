@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, ObjectId, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IVisitor extends Document {
   name: string;
@@ -8,24 +8,27 @@ export interface IVisitor extends Document {
   email: string;
   address?: string;
   visitDate: Date;
-  invitedBy: ObjectId;
-  createdBy: ObjectId;
-  updatedBy?: ObjectId;
-  deletedBy?: ObjectId;
+
+  // ALLOW NULL
+  invitedBy: Types.ObjectId | null;
+  createdBy: Types.ObjectId | null;
+
+  updatedBy?: Types.ObjectId | null;
+  deletedBy?: Types.ObjectId | null;
+
   isActive: number;
   isDelete: number;
   status?: "pending" | "approve" | "reject";
   createdAt: Date;
   updatedAt?: Date;
   deletedAt?: Date;
-  // NEW FIELDS
+
+  // New fields
   chapter?: string;
   chapterId?: Types.ObjectId | null;
   chapter_directory_name?: string;
-
   invited_by_member?: string;
   invited_from?: string;
-
   zone?: string;
   zoneId?: Types.ObjectId | null;
 }
@@ -40,10 +43,11 @@ const VisitorSchema: Schema = new Schema({
 
   visitDate: { type: Date, required: true },
 
-  invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', required: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', required: true },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
-  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+  // FIXED (nullable ObjectIds)
+  invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Member", default: null },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Member", default: null },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Member", default: null },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Member", default: null },
 
   isActive: { type: Number, default: 1 },
   isDelete: { type: Number, default: 0 },
@@ -65,9 +69,8 @@ const VisitorSchema: Schema = new Schema({
   zoneId: { type: mongoose.Schema.Types.ObjectId, ref: "Zone", default: null },
 
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date },
-  deletedAt: { type: Date },
+  updatedAt: { type: Date, default: null },
+  deletedAt: { type: Date, default: null },
 });
-
 
 export const Visitor = mongoose.model<IVisitor>('Visitor', VisitorSchema);

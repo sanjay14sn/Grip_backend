@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import {
     JsonController,
     Get,
@@ -25,7 +25,7 @@ import { AuthMiddleware } from '../../middleware/AuthorizationMiddleware';
 @UseBefore(AuthMiddleware)
 export default class VisitorController {
 
- 
+
 
     @Get('/list')
     async listVisitors(@QueryParams() queryParams: ListVisitorDto, @Res() res: Response, @Req() req: Request) {
@@ -124,25 +124,32 @@ export default class VisitorController {
 
 
     @Get("/member/list/:id")
-    async listVisitorMembers(
+    async getVisitorsByChapter(
         @Param("id") id: string,
-        @Req() req: Request,
-        @QueryParams() queryParams: ListVisitorDto,
+        @QueryParams() query: any,
         @Res() res: Response
     ) {
         try {
             const {
                 page = 1,
                 limit = 10,
+                search = "",
                 sortField = "createdAt",
                 sortOrder = "desc",
-            } = queryParams;
+            } = query;
 
             const skip = (page - 1) * limit;
 
             /** -------------------------
-             *  VERIFY CHAPTER EXISTS
+             *  VALIDATE CHAPTER
              * ------------------------- */
+            if (!Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid chapter ID format",
+                });
+            }
+
             const chapter = await Chapter.findOne({
                 _id: id,
                 isDelete: 0,
@@ -158,97 +165,55 @@ export default class VisitorController {
             }
 
             /** -------------------------
-             *  FETCH MEMBER LIST
-             * ------------------------- */
-            const members = await Member.find({
-                "chapterInfo.chapterId": id,
-                isActive: 1,
-                isDelete: 0,
-            }).lean();
-
-            const memberIds = members.map((m) => m._id);
-
-            /** -------------------------
              *  BUILD QUERY
              * ------------------------- */
-            const query: FilterQuery<IVisitor> = {
+            const queryConditions: any = {
                 isDelete: 0,
-                invitedBy: { $in: memberIds },
+                chapterId: new Types.ObjectId(id),
             };
+
+            /** -------------------------
+             *  SEARCH
+             * ------------------------- */
+            if (search) {
+                const searchRegex = new RegExp(search, "i");
+                queryConditions.$or = [
+                    { name: searchRegex },
+                    { company: searchRegex },
+                    { category: searchRegex },
+                    { mobile: searchRegex },
+                    { email: searchRegex },
+                ];
+            }
 
             /** -------------------------
              *  FETCH RECORDS + COUNT
              * ------------------------- */
             const [records, total] = await Promise.all([
-                Visitor.find(query)
-                    .populate("invitedBy", "personalDetails contactDetails")
+                Visitor.find(queryConditions)
+                    .populate("invitedBy", "personalDetails.firstName personalDetails.lastName contactDetails.email")
                     .sort({ [sortField]: sortOrder === "asc" ? 1 : -1 })
                     .skip(skip)
-                    .limit(limit)
+                    .limit(Number(limit))
                     .lean(),
-                Visitor.countDocuments(query),
+
+                Visitor.countDocuments(queryConditions),
             ]);
 
             /** -------------------------
-             *  FORMAT OUTPUT
-             * ------------------------- */
-            const formattedRecords = records.map((record) => {
-                const invited = record.invitedBy as any;
-
-                return {
-                    _id: record._id,
-                    name: record.name,
-                    company: record.company,
-                    category: record.category,
-                    mobile: record.mobile,
-                    email: record.email,
-                    address: record.address,
-                    visitDate: record.visitDate,
-                    status: record.status,
-
-                    chapter: record.chapter,
-                    chapterId: record.chapterId,
-                    chapter_directory_name: record.chapter_directory_name,
-                    zone: record.zone,
-                    zoneId: record.zoneId,
-
-                    invite: {
-                        id: invited?._id || null,
-                        name: invited
-                            ? `${invited.personalDetails?.firstName || ""} ${invited.personalDetails?.lastName || ""
-                                }`.trim()
-                            : "",
-                        mobile: invited?.contactDetails?.mobileNumber || "",
-                        profileImage:
-                            invited?.personalDetails?.profileImage || null,
-                    },
-
-                    createdAt: record.createdAt,
-                };
-            });
-
-            /** -------------------------
-             *  SEND RESPONSE
+             *  RESPONSE
              * ------------------------- */
             return res.status(200).json({
                 success: true,
-                message: "Visitor members records fetched successfully",
-                data: {
-                    chapter: {
-                        _id: chapter._id,
-                        chapterName: chapter.chapterName,
-                        zoneName: (chapter.zoneId as any)?.zoneName,
-                        cidName: (chapter.cidId as any)?.name,
-                        memberCount: members.length,
-                    },
-                    records: formattedRecords,
-                    pagination: {
-                        total,
-                        page,
-                        limit,
-                        totalPages: Math.ceil(total / limit),
-                    },
+                message: "Visitors fetched successfully",
+                chapter,
+                pagination: {
+                    total,
+                    page: Number(page),
+                    limit: Number(limit),
+                    totalPages: Math.ceil(total / limit),
                 },
+                data: records,
             });
         } catch (error) {
             console.error("Error fetching Visitor records:", error);
