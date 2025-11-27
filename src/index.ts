@@ -87,14 +87,10 @@ const initServer = async (): Promise<void> => {
     );
     console.log("✅ CORS middleware enabled");
 
-    // app.use(express.json({ limit: "10mb" }));
-    // console.log("✅ JSON parser enabled");
-
-    // --- Serve static files ---
-     app.use("/public", express.static(path.join(__dirname, "../public")));
-
-
-
+    // --- Serve static files (works in dev + prod build) ---
+    const publicPath = path.resolve(__dirname, "../public");
+    app.use("/api/public", express.static(publicPath));
+    console.log("🖼️ Static images served from:", publicPath);
 
     // --- Hook routing-controllers ---
     console.log("🧩 Registering routing-controllers...");
@@ -104,7 +100,6 @@ const initServer = async (): Promise<void> => {
     //   defaultErrorHandler: true,
     //   validation: true,
     // });
-
 
     // ✅ Setup routing-controllers (handles JSON internally)
     useExpressServer(app, {
