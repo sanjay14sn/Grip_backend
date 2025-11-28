@@ -1,5 +1,3 @@
-import multer from "multer";
-import path from "path";
 import {
   JsonController,
   Get,
@@ -20,39 +18,15 @@ import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { FilterQuery } from "mongoose";
 import { Uploads } from "../../utils/uploads/imageUpload";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // controller is inside src/controllers/Admin/
-    // so go 2 levels up to reach project root
-    cb(null, path.join(__dirname, "../../../public/pins"));
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, "img-" + Date.now() + ext);
-  },
-});
-
-const upload = multer({ storage });
-
-declare global {
-  namespace Express {
-    interface Request {
-      file?: Express.Multer.File;
-    }
-  }
-}
-
-
 
 @JsonController("/api/admin/pins")
 @UseBefore(AuthMiddleware)
 export default class PinController {
-  // 🟢 Create Pin
   @Post("/")
   async createPin(
+    @Body({ validate: true }) body: CreatePinDto,
     @Req() req: Request,
-    @Res() res: Response,
-    @Body({validate: true}) body: CreatePinDto
+    @Res() res: Response
   ) {
     try {
       const { name } = body;
@@ -62,22 +36,22 @@ export default class PinController {
           .status(400)
           .json({ success: false, message: "Name is required" });
       }
+      let imageMeta = null;
 
-  let imageMeta = null;
+      if (req.files && req.files.image) {
+        const file = Array.isArray(req.files.image)
+          ? req.files.image[0]
+          : req.files.image;
 
-  if (req.file) {
-    imageMeta = {
-      docName: req.file.filename,
-      docPath: "pins",
-      originalName: req.file.originalname,
-    };
-  }
-
-
+        imageMeta = (
+          await Uploads.processFiles([file], "pins", "img", undefined, "")
+        )[0];
+      }
       const newPin = new Pin({
         name,
-        image: imageMeta || null, // store full image metadata if available
+        image: imageMeta || null,
         createdBy: (req as any).user?.id,
+        createdAt: new Date(),
       });
 
       const savedPin = await newPin.save();
@@ -87,11 +61,12 @@ export default class PinController {
         message: "Pin created successfully",
         data: savedPin,
       });
-    } catch (error: unknown) {
-      console.error("Error creating pin:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      return res.status(500).json({ success: false, message: errorMessage });
+    } catch (err) {
+      console.error("Error creating pin:", err);
+      return res.status(500).json({
+        success: false,
+        message: err instanceof Error ? err.message : "Unknown error",
+      });
     }
   }
 
