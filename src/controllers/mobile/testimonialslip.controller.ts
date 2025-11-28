@@ -120,9 +120,15 @@ export default class TestimonialSlipController {
     }
 
     if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+
       query.createdAt = {
-        $gte: fromDate,
-        $lte: toDate,
+        $gte: start,
+        $lte: end,
       };
     }
 
@@ -187,9 +193,15 @@ export default class TestimonialSlipController {
     }
 
     if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+
       query.createdAt = {
-        $gte: fromDate,
-        $lte: toDate,
+        $gte: start,
+        $lte: end,
       };
     }
 

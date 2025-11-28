@@ -109,9 +109,15 @@ export default class OneToOneController {
     }
 
     if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+
       query.createdAt = {
-        $gte: new Date(fromDate),
-        $lte: new Date(toDate),
+        $gte: start,
+        $lte: end,
       };
     }
 
