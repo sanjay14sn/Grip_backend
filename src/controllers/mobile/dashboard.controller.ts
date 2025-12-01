@@ -64,17 +64,21 @@ export default class DashboardController {
       // -----------------------
       function getWeekRange(meetingDay: number) {
         const now = new Date();
-        const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+        const currentDay = now.getDay(); // 0=Sun, 6=Sat
 
-        // Calculate difference to the start of the week
-        let diff = meetingDay - currentDay;
+        // Find LAST OCCURRENCE of meetingDay
+        let diff = currentDay - meetingDay;
+        if (diff < 0) diff += 7; // go backwards up to last meeting day
+
+        // Start = last meeting day (Saturday)
         const start = new Date(now);
-        start.setDate(now.getDate() + diff); // go to the selected weekday
-        start.setHours(0, 0, 0, 0); // start of day
+        start.setDate(now.getDate() - diff);
+        start.setHours(0, 0, 0, 0);
 
+        // End = +6 days (Friday 23:59:59.999)
         const end = new Date(start);
-        end.setDate(start.getDate() + 6); // full 7-day week
-        end.setHours(23, 59, 59, 999); // end of day
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
 
         return { start, end };
       }

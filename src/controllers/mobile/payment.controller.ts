@@ -33,9 +33,9 @@ export default class PaymentController {
     const limit = queryParams.limit ?? 100;
     const skip = (page - 1) * limit;
 
-    const query: FilterQuery<IPayment> = { 
+    const query: FilterQuery<IPayment> = {
       isDelete: 0,
-      startDate: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } // Today at 00:00:00
+      startDate: { $gte: new Date() }   // From current date & time
     };
 
     const user = (req as any).user;
