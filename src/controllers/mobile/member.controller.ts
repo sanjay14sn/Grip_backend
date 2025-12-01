@@ -14,12 +14,14 @@ import {
   InternalServerError,
   Req,
   UseBefore,
+  BodyParam,
 } from "routing-controllers";
 import { Response, Request } from "express";
 import {
   CreateMemberDto,
   UpdateMemberDto,
 } from "../../dto/create-member.dto";
+import { Uploads } from "../../utils/uploads/imageUpload";
 import { ListMembersDto } from "../../dto/list-member.dto";
 import { UpdatePinDto } from "../../dto/update-pin.dto";
 import { Member } from "../../models/member.model";
@@ -136,7 +138,6 @@ export default class MemberController {
     }
   }
 
-
   // Public version (skips token validation)
   @Get("/by-chapter/public/:chapterId")
   async getMembersByChapterIdPublic(
@@ -153,8 +154,12 @@ export default class MemberController {
 
       if (chapterId) {
         if (!Types.ObjectId.isValid(chapterId))
-          return res.status(400).json({ success: false, message: "Invalid chapter ID format" });
-        queryConditions[0].$match["chapterInfo.chapterId"] = new Types.ObjectId(chapterId);
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid chapter ID format" });
+        queryConditions[0].$match["chapterInfo.chapterId"] = new Types.ObjectId(
+          chapterId
+        );
       }
 
       if (search) {
@@ -178,7 +183,12 @@ export default class MemberController {
             as: "chapterInfo.zoneId",
           },
         },
-        { $unwind: { path: "$chapterInfo.zoneId", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: {
+            path: "$chapterInfo.zoneId",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $lookup: {
             from: "chapters",
@@ -187,7 +197,12 @@ export default class MemberController {
             as: "chapterInfo.chapterId",
           },
         },
-        { $unwind: { path: "$chapterInfo.chapterId", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: {
+            path: "$chapterInfo.chapterId",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $lookup: {
             from: "cids",
@@ -196,7 +211,12 @@ export default class MemberController {
             as: "chapterInfo.CIDId",
           },
         },
-        { $unwind: { path: "$chapterInfo.CIDId", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: {
+            path: "$chapterInfo.CIDId",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
 
       const sortStage = { $sort: { [sortBy]: sort === "desc" ? -1 : 1 } };
@@ -579,15 +599,20 @@ export default class MemberController {
       }
       throw new InternalServerError(
         "Failed to update member: " +
-        (error instanceof Error ? error.message : JSON.stringify(error))
+          (error instanceof Error ? error.message : JSON.stringify(error))
       );
     }
   }
 
   @Put("/profile/update/:id")
+  @UseBefore(AuthMiddleware)
   async updateProfileMember(
     @Param("id") id: string,
-    @Body({ validate: true }) memberData: UpdateProfileMemberDto,
+    // payload as JSON string
+    @BodyParam("payload") payloadString: string,
+    @Body({ validate: { whitelist: true, forbidNonWhitelisted: false } })
+    memberData: UpdateProfileMemberDto,
+
     @Res() res: Response,
     @Req() req: Request
   ) {
@@ -597,7 +622,37 @@ export default class MemberController {
         throw new NotFoundError("Member not found");
       }
 
-      // Update nested personalDetails
+      // If payload exists, override memberData completely
+      if (payloadString) {
+        const parsed = JSON.parse(payloadString);
+
+        // Manually assign parsed payload to validated memberData object
+        Object.assign(memberData, parsed);
+      }
+
+      /** ------------------------------------------------------
+       *  Handle Profile Image Upload
+       * ------------------------------------------------------ */
+      let imageMeta = null;
+
+      if (req.files && req.files.profileImage) {
+        const file = Array.isArray(req.files.profileImage)
+          ? req.files.profileImage[0]
+          : req.files.profileImage;
+
+        imageMeta = (
+          await Uploads.processFiles([file], "members", "img", undefined, "")
+        )[0];
+      }
+
+      // Save uploaded image
+      if (imageMeta) {
+        existingMember.personalDetails.profileImage = imageMeta;
+      }
+
+      /** ------------------------------------------------------
+       *  Update personalDetails
+       * ------------------------------------------------------ */
       if (memberData.personalDetails) {
         const { firstName, lastName, dob } = memberData.personalDetails;
         if (firstName) existingMember.personalDetails.firstName = firstName;
@@ -605,18 +660,24 @@ export default class MemberController {
         if (dob) existingMember.personalDetails.dob = new Date(dob);
       }
 
-      // Update nested contactDetails
+      /** ------------------------------------------------------
+       *  Update contactDetails
+       * ------------------------------------------------------ */
       if (memberData.contactDetails) {
         const { secondaryPhone, website } = memberData.contactDetails;
+
         if (secondaryPhone)
           existingMember.contactDetails.secondaryPhone = secondaryPhone;
         if (website) existingMember.contactDetails.website = website;
       }
 
-      // Update nested businessAddress
+      /** ------------------------------------------------------
+       *  Update businessAddress
+       * ------------------------------------------------------ */
       if (memberData.businessAddress) {
         const { addressLine1, addressLine2, city, state, postalCode } =
           memberData.businessAddress;
+
         if (addressLine1)
           existingMember.businessAddress.addressLine1 = addressLine1;
         if (addressLine2)
@@ -625,9 +686,14 @@ export default class MemberController {
         if (state) existingMember.businessAddress.state = state;
         if (postalCode) existingMember.businessAddress.postalCode = postalCode;
       }
+
+      /** ------------------------------------------------------
+       *  Update businessDetails
+       * ------------------------------------------------------ */
       if (memberData.businessDetails) {
         const { businessDescription, yearsInBusiness } =
           memberData.businessDetails;
+
         if (businessDescription)
           existingMember.businessDetails.businessDescription =
             businessDescription;
@@ -641,44 +707,13 @@ export default class MemberController {
       return res.status(200).json({
         success: true,
         message: "Member updated successfully",
-        data: {
-          _id: updatedMember._id,
-          personalDetails: {
-            firstName: updatedMember.personalDetails.firstName,
-            lastName: updatedMember.personalDetails.lastName,
-            dob: updatedMember.personalDetails.dob,
-          },
-          businessAddress: {
-            addressLine1: updatedMember.businessAddress.addressLine1,
-            addressLine2: updatedMember.businessAddress.addressLine2,
-            city: updatedMember.businessAddress.city,
-            state: updatedMember.businessAddress.state,
-            postalCode: updatedMember.businessAddress.postalCode,
-          },
-          businessDetails: {
-            businessDescription:
-              updatedMember.businessDetails?.businessDescription,
-            yearsInBusiness: updatedMember.businessDetails?.yearsInBusiness,
-          },
-          contactDetails: {
-            website: updatedMember.contactDetails.website,
-            email: updatedMember.contactDetails.email,
-          },
-        },
+        data: updatedMember,
       });
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error updating member:", error);
-      if ((error as any).name === "CastError") {
-        throw new BadRequestError("Invalid member ID");
-      }
-      if ((error as any).code === 11000) {
-        throw new BadRequestError(
-          "Member with this Mobile Number already exists"
-        );
-      }
+
       throw new InternalServerError(
-        "Failed to update member: " +
-        (error instanceof Error ? error.message : JSON.stringify(error))
+        error instanceof Error ? error.message : "Unknown error"
       );
     }
   }
@@ -965,11 +1000,17 @@ export default class MemberController {
         {
           $group: {
             _id: "$purpose",
-            present: { $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] } },
+            present: {
+              $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] },
+            },
             absent: { $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] } },
             late: { $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] } },
-            managed: { $sum: { $cond: [{ $eq: ["$status", "medical"] }, 1, 0] } },
-            substitute: { $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] } },
+            managed: {
+              $sum: { $cond: [{ $eq: ["$status", "medical"] }, 1, 0] },
+            },
+            substitute: {
+              $sum: { $cond: [{ $eq: ["$status", "substitute"] }, 1, 0] },
+            },
             meetingCount: {
               $sum: { $cond: [{ $eq: ["$purpose", "meeting"] }, 1, 0] },
             },
@@ -980,11 +1021,24 @@ export default class MemberController {
       /* --------------------------------------------------
          Build response
       -------------------------------------------------- */
-      const result:any = {
+      const result: any = {
         [userId]: {
-          meeting: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0, totalMeetings: 0 },
+          meeting: {
+            present: 0,
+            absent: 0,
+            late: 0,
+            managed: 0,
+            substitute: 0,
+            totalMeetings: 0,
+          },
           event: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
-          training: { present: 0, absent: 0, late: 0, managed: 0, substitute: 0 },
+          training: {
+            present: 0,
+            absent: 0,
+            late: 0,
+            managed: 0,
+            substitute: 0,
+          },
         },
       };
 
@@ -1017,30 +1071,36 @@ export default class MemberController {
     }
   }
 
-
   @Get("/one-to-one-count/:userId")
   async getOneToOneCountForMembers(
     @Param("userId") userId: string,
     @Res() res: Response
   ) {
     try {
-      if (!userId) return res.status(400).json({ success: false, message: "userId is required in URL" });
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "userId is required in URL" });
 
       const objId = new mongoose.Types.ObjectId(userId);
 
       const fromCounts = await OneToOne.aggregate([
         { $match: { isDelete: 0, fromMember: objId } },
-        { $group: { _id: "$fromMember", count: { $sum: 1 } } }
+        { $group: { _id: "$fromMember", count: { $sum: 1 } } },
       ]);
 
-      const countsMap: Record<string, { fromCount: number }> = { [userId]: { fromCount: 0 } };
+      const countsMap: Record<string, { fromCount: number }> = {
+        [userId]: { fromCount: 0 },
+      };
 
       if (fromCounts.length) countsMap[userId].fromCount = fromCounts[0].count;
 
       return res.status(200).json({ success: true, data: countsMap });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch one-to-one counts" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch one-to-one counts" });
     }
   }
 
@@ -1050,27 +1110,49 @@ export default class MemberController {
     @Res() res: Response
   ) {
     try {
-      if (!userId) return res.status(400).json({ success: false, message: "userId is required in URL" });
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "userId is required in URL" });
 
       const objId = new mongoose.Types.ObjectId(userId);
 
       const counts = await ReferralSlipModel.aggregate([
-        { $match: { isDelete: 0, $or: [{ fromMember: objId }, { toMember: objId }] } },
-        { $group: { _id: null, givenArr: { $push: "$fromMember" }, receivedArr: { $push: "$toMember" } } }
+        {
+          $match: {
+            isDelete: 0,
+            $or: [{ fromMember: objId }, { toMember: objId }],
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            givenArr: { $push: "$fromMember" },
+            receivedArr: { $push: "$toMember" },
+          },
+        },
       ]);
 
-      const referralMap: Record<string, { given: number; received: number }> = { [userId]: { given: 0, received: 0 } };
+      const referralMap: Record<string, { given: number; received: number }> = {
+        [userId]: { given: 0, received: 0 },
+      };
 
       if (counts.length) {
         const { givenArr, receivedArr } = counts[0];
-        referralMap[userId].given = givenArr.filter((id: any) => id.toString() === userId).length;
-        referralMap[userId].received = receivedArr.filter((id: any) => id.toString() === userId).length;
+        referralMap[userId].given = givenArr.filter(
+          (id: any) => id.toString() === userId
+        ).length;
+        referralMap[userId].received = receivedArr.filter(
+          (id: any) => id.toString() === userId
+        ).length;
       }
 
       return res.status(200).json({ success: true, data: referralMap });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch referral counts" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch referral counts" });
     }
   }
 
@@ -1080,35 +1162,55 @@ export default class MemberController {
     @Res() res: Response
   ) {
     try {
-      if (!userId) return res.status(400).json({ success: false, message: "userId is required in URL" });
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "userId is required in URL" });
 
       const objId = new mongoose.Types.ObjectId(userId);
 
       const amounts = await ThankYouSlip.aggregate([
-        { $match: { isDelete: 0, $or: [{ fromMember: objId }, { toMember: objId }] } },
+        {
+          $match: {
+            isDelete: 0,
+            $or: [{ fromMember: objId }, { toMember: objId }],
+          },
+        },
         {
           $group: {
             _id: null,
             givenArr: { $push: "$fromMember" },
             givenAmounts: { $push: "$amount" },
             receivedArr: { $push: "$toMember" },
-            receivedAmounts: { $push: "$amount" }
-          }
-        }
+            receivedAmounts: { $push: "$amount" },
+          },
+        },
       ]);
 
-      const thankYouMap:any = { [userId]: { givenAmount: 0, receivedAmount: 0 } };
+      const thankYouMap: any = {
+        [userId]: { givenAmount: 0, receivedAmount: 0 },
+      };
 
       if (amounts.length) {
-        const { givenArr, givenAmounts, receivedArr, receivedAmounts } = amounts[0];
-        givenArr.forEach((id: any, idx: number) => { if (id.toString() === userId) thankYouMap[userId].givenAmount += givenAmounts[idx] || 0; });
-        receivedArr.forEach((id: any, idx: number) => { if (id.toString() === userId) thankYouMap[userId].receivedAmount += receivedAmounts[idx] || 0; });
+        const { givenArr, givenAmounts, receivedArr, receivedAmounts } =
+          amounts[0];
+        givenArr.forEach((id: any, idx: number) => {
+          if (id.toString() === userId)
+            thankYouMap[userId].givenAmount += givenAmounts[idx] || 0;
+        });
+        receivedArr.forEach((id: any, idx: number) => {
+          if (id.toString() === userId)
+            thankYouMap[userId].receivedAmount += receivedAmounts[idx] || 0;
+        });
       }
 
       return res.status(200).json({ success: true, data: thankYouMap });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch ThankYouSlip amounts" });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch ThankYouSlip amounts",
+      });
     }
   }
 
@@ -1118,13 +1220,16 @@ export default class MemberController {
     @Res() res: Response
   ) {
     try {
-      if (!userId) return res.status(400).json({ success: false, message: "userId is required in URL" });
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "userId is required in URL" });
 
       const objId = new mongoose.Types.ObjectId(userId);
 
       const counts = await Visitor.aggregate([
         { $match: { invitedBy: objId, isDelete: 0, isActive: 1 } },
-        { $group: { _id: "$invitedBy", count: { $sum: 1 } } }
+        { $group: { _id: "$invitedBy", count: { $sum: 1 } } },
       ]);
 
       const visitorMap: Record<string, number> = { [userId]: 0 };
@@ -1133,7 +1238,9 @@ export default class MemberController {
       return res.status(200).json({ success: true, data: visitorMap });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch visitor counts" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch visitor counts" });
     }
   }
 
@@ -1143,21 +1250,38 @@ export default class MemberController {
     @Res() res: Response
   ) {
     try {
-      if (!userId) return res.status(400).json({ success: false, message: "userId is required in URL" });
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "userId is required in URL" });
 
       const objId = new mongoose.Types.ObjectId(userId);
 
       const result = await TestimonialSlip.aggregate([
-        { $match: { isDelete: 0, isActive: 1, $or: [{ fromMember: objId }, { toMember: objId }] } },
+        {
+          $match: {
+            isDelete: 0,
+            isActive: 1,
+            $or: [{ fromMember: objId }, { toMember: objId }],
+          },
+        },
         {
           $facet: {
-            given: [{ $match: { fromMember: objId } }, { $group: { _id: "$fromMember", count: { $sum: 1 } } }],
-            received: [{ $match: { toMember: objId } }, { $group: { _id: "$toMember", count: { $sum: 1 } } }]
-          }
-        }
+            given: [
+              { $match: { fromMember: objId } },
+              { $group: { _id: "$fromMember", count: { $sum: 1 } } },
+            ],
+            received: [
+              { $match: { toMember: objId } },
+              { $group: { _id: "$toMember", count: { $sum: 1 } } },
+            ],
+          },
+        },
       ]);
 
-      const countsMap: Record<string, { given: number; received: number }> = { [userId]: { given: 0, received: 0 } };
+      const countsMap: Record<string, { given: number; received: number }> = {
+        [userId]: { given: 0, received: 0 },
+      };
       if (result.length) {
         const { given, received } = result[0];
         if (given.length) countsMap[userId].given = given[0].count;
@@ -1167,7 +1291,10 @@ export default class MemberController {
       return res.status(200).json({ success: true, data: countsMap });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: "Failed to fetch testimonial counts" });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch testimonial counts",
+      });
     }
   }
 }

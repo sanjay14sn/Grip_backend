@@ -6,6 +6,9 @@ export interface IHeadTable extends Document {
   zoneId: ObjectId;
   chapterId: ObjectId;
   panelAssociateId: ObjectId;
+  // ✅ Add these
+  roleId?: ObjectId;
+  position?: string;
   isActive?: number;
   isDelete?: number;
   createdAt: Date;
@@ -13,51 +16,62 @@ export interface IHeadTable extends Document {
   deletedAt?: Date;
 }
 
-const headTableSchema = new Schema<IHeadTable>({
-  countryId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Country',
-    required: true
+const headTableSchema = new Schema<IHeadTable>(
+  {
+    countryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Country",
+      required: true,
+    },
+    stateId: {
+      type: Schema.Types.ObjectId,
+      ref: "State",
+      required: true,
+    },
+    zoneId: {
+      type: Schema.Types.ObjectId,
+      ref: "Zone",
+      required: true,
+    },
+    chapterId: {
+      type: Schema.Types.ObjectId,
+      ref: "Chapter",
+      required: true,
+    },
+    panelAssociateId: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      required: true,
+    },
+    // ✅ MUST ADD THESE
+    roleId: {
+      type: Schema.Types.ObjectId,
+      ref: "Role",
+    },
+    position: {
+      type: String,
+    },
+    isActive: {
+      type: Number,
+      default: 1,
+    },
+    isDelete: {
+      type: Number,
+      default: 0,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    deletedAt: {
+      type: Date,
+    },
   },
-  stateId: {
-    type: Schema.Types.ObjectId,
-    ref: 'State',
-    required: true
-  },
-  zoneId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Zone',
-    required: true
-  },
-  chapterId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Chapter',
-    required: true
-  },
-  panelAssociateId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Member',
-    required: true
-  },
-  isActive: {
-    type: Number,
-    default: 1
-  },
-  isDelete: {
-    type: Number,
-    default: 0
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  deletedAt: {
-    type: Date
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 export const HeadTable = model<IHeadTable>('HeadTable', headTableSchema);

@@ -25,6 +25,8 @@ import ThankYouSlip from "../../models/thankyouslip.model";
 import { AuthMiddleware } from "../../middleware/AuthorizationMiddleware";
 import { User } from "../../models/user.model";
 import { TopAchiver } from "../../models/topAchiver.model";
+import { HeadTable } from "../../models/headtable.model";
+
 
 @JsonController("/api/mobile/chapters")
 export default class ChapterController {
@@ -448,12 +450,85 @@ export default class ChapterController {
     }
   }
 
+  // @Get("/headTableMembers/:chapterId")
+  // async getHeadTableMembers(
+  //   @Param("chapterId") chapterId: string,
+  //   @Res() res: Response
+  // ) {
+  //   try {
+  //     const chapter = await Chapter.findById(chapterId);
+  //     if (!chapter) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Chapter not found",
+  //       });
+  //     }
+  //     const memberPipeline = [
+  //       {
+  //         $match: {
+  //           "chapterInfo.chapterId": new mongoose.Types.ObjectId(chapterId),
+  //           isHeadtable: true,
+  //           isDelete: 0,
+  //         },
+  //       },
+  //       {
+  //         $lookup: {
+  //           from: "roles",
+  //           localField: "role",
+  //           foreignField: "_id",
+  //           as: "roleDetails",
+  //         },
+  //       },
+  //       { $unwind: { path: "$roleDetails", preserveNullAndEmptyArrays: true } },
+  //       {
+  //         $project: {
+  //           _id: 0,
+  //           name: {
+  //             $concat: [
+  //               "$personalDetails.firstName",
+  //               " ",
+  //               "$personalDetails.lastName",
+  //             ],
+  //           },
+
+  //           companyName: "$personalDetails.companyName",
+  //           mobileNumber: "$contactDetails.mobileNumber",
+  //           email: "$contactDetails.email",
+  //           roleName: { $ifNull: ["$roleDetails.name", "N/A"] },
+  //           profileImage: { $ifNull: ["$personalDetails.profileImage", null] },
+  //         },
+  //       },
+  //     ];
+
+  //     const headTableMembers = await Member.aggregate(memberPipeline);
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Head table members fetched successfully",
+  //       data: headTableMembers,
+  //     });
+  //   } catch (error) {
+  //     console.error(
+  //       `Error fetching head table members for chapter ${chapterId}:`,
+  //       error
+  //     );
+  //     return res.status(500).json({
+  //       success: false,
+  //       message: "Failed to fetch head table members",
+  //       error:
+  //         error instanceof Error ? error.message : "An unknown error occurred",
+  //     });
+  //   }
+  // }
+
   @Get("/headTableMembers/:chapterId")
+  @UseBefore(AuthMiddleware)
   async getHeadTableMembers(
     @Param("chapterId") chapterId: string,
     @Res() res: Response
   ) {
     try {
+      // Validate chapter exists
       const chapter = await Chapter.findById(chapterId);
       if (!chapter) {
         return res.status(404).json({
@@ -461,60 +536,52 @@ export default class ChapterController {
           message: "Chapter not found",
         });
       }
-      const memberPipeline = [
-        {
-          $match: {
-            "chapterInfo.chapterId": new mongoose.Types.ObjectId(chapterId),
-            isHeadtable: true,
-            isDelete: 0,
-          },
-        },
-        {
-          $lookup: {
-            from: "roles",
-            localField: "role",
-            foreignField: "_id",
-            as: "roleDetails",
-          },
-        },
-        { $unwind: { path: "$roleDetails", preserveNullAndEmptyArrays: true } },
-        {
-          $project: {
-            _id: 0,
-            name: {
-              $concat: [
-                "$personalDetails.firstName",
-                " ",
-                "$personalDetails.lastName",
-              ],
-            },
 
-            companyName: "$personalDetails.companyName",
-            mobileNumber: "$contactDetails.mobileNumber",
-            email: "$contactDetails.email",
-            roleName: { $ifNull: ["$roleDetails.name", "N/A"] },
-            profileImage: { $ifNull: ["$personalDetails.profileImage", null] },
-          },
-        },
-      ];
+      // Fetch ONLY from headtables collection
+      const headTableData = await HeadTable.find({ chapterId })
+        .populate({
+          path: "panelAssociateId",
+          select: `
+            personalDetails.firstName 
+            personalDetails.lastName 
+            personalDetails.companyName 
+            personalDetails.profileImage 
+            contactDetails.mobileNumber 
+            contactDetails.email
+          `,
+        })
+        .populate({
+          path: "roleId",
+          select: "name",
+        })
+        .lean();
 
-      const headTableMembers = await Member.aggregate(memberPipeline);
+      // Format response
+      const formatted = headTableData.map((ht: any) => {
+        const m = ht.panelAssociateId;
+
+        return {
+          name: `${m.personalDetails.firstName} ${m.personalDetails.lastName}`,
+          companyName: m.personalDetails.companyName || "",
+          mobileNumber: m.contactDetails.mobileNumber || "",
+          email: m.contactDetails.email || "",
+          profileImage: m.personalDetails.profileImage || null,
+          roleName: ht.position || ht?.roleId?.name || "N/A",
+        };
+      });
 
       return res.status(200).json({
         success: true,
         message: "Head table members fetched successfully",
-        data: headTableMembers,
+        data: formatted,
       });
     } catch (error) {
-      console.error(
-        `Error fetching head table members for chapter ${chapterId}:`,
-        error
-      );
+      console.error("Error fetching head table members:", error);
+
       return res.status(500).json({
         success: false,
         message: "Failed to fetch head table members",
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
