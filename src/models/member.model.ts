@@ -30,11 +30,9 @@ interface ITermsAndCertifications {
  * Interface: Member (Main)
  */
 export interface IMember extends Document {
-  // Authentication
   pin: string;
   fcmToken?: string;
 
-  // Chapter Information
   chapterInfo: {
     countryName: string;
     stateName: string;
@@ -45,7 +43,6 @@ export interface IMember extends Document {
     howDidYouHearAboutGRIP?: string;
   };
 
-  // Personal Details
   personalDetails: {
     profileImage?: {
       docName: string;
@@ -63,10 +60,9 @@ export interface IMember extends Document {
     otherNetworkingOrgs?: string;
     isOtherNetworkingOrgs?: boolean;
     education?: string;
-    pins?: mongoose.Types.ObjectId[]; // ✅ added field
+    pins?: mongoose.Types.ObjectId[];
   };
 
-  // Business Address
   businessAddress: {
     addressLine1?: string;
     addressLine2?: string;
@@ -75,7 +71,6 @@ export interface IMember extends Document {
     postalCode?: string;
   };
 
-  // Contact Details
   contactDetails: {
     email: string;
     mobileNumber: string;
@@ -84,28 +79,35 @@ export interface IMember extends Document {
     gstNumber?: string;
   };
 
-  // Business Details
   businessDetails: {
     businessDescription?: string;
     yearsInBusiness?: string;
   };
 
-  // Business References
   businessReferences: IBusinessReference[];
 
-  // Terms and Certifications
   termsAndCertifications: ITermsAndCertifications;
 
-  // Role and Status
   role?: Types.ObjectId;
   isHeadtable?: boolean;
   status?: "pending" | "active" | "decline";
   type?: string;
 
-  // System Fields
+  // ⭐ Metric Fields
+  carryForward: {
+    oneToOne: number;
+    referrals: number;
+    visitors: number;
+    trainings: number;
+    business: number;
+    testimonials: number;
+  };
+
+  activePeriodId?: Types.ObjectId; // links member to their current 6-month period
+
   isActive: number;
   isDelete: number;
-  createdAt: Date;
+  createdAt: Date; // join date
   updatedAt?: Date;
   deletedAt?: Date;
   createdBy?: ObjectId;
@@ -223,6 +225,23 @@ const memberSchema = new Schema<IMember>(
       default: "pending",
     },
     type: { type: String, default: "member" },
+
+    // ⭐ CARRY FORWARD FIELDS
+    carryForward: {
+      oneToOne: { type: Number, default: 0 },
+      referrals: { type: Number, default: 0 },
+      visitors: { type: Number, default: 0 },
+      trainings: { type: Number, default: 0 },
+      business: { type: Number, default: 0 },
+      testimonials: { type: Number, default: 0 },
+    },
+
+    // ⭐ ACTIVE PERIOD FOR 6-MONTH CYCLE
+    activePeriodId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Period",
+      default: null,
+    },
 
     // System Fields
     isActive: { type: Number, default: 0 },
