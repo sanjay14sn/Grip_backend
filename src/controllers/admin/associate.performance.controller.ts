@@ -17,6 +17,8 @@ import thankyouslipModel from "../../models/thankyouslip.model";
 
 // Constants
 import { MINIMUMS, MAX_POINTS } from "../../services/constants";
+import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
 type Key = "oneToOne" | "referrals" | "visitors";
 
@@ -31,7 +33,7 @@ export default class PeriodReportController {
     ) {
         try {
             const { memberIds, page = 1, limit = 10 } = body;
-            const sliceStart = (page - 1) * limit;
+            const sliceStart = (page - 1) * limit;  
             const ids = memberIds.slice(sliceStart, sliceStart + limit);
 
             const results = [];
@@ -69,7 +71,7 @@ export default class PeriodReportController {
         }
 
         // 3️⃣ Apply carry-forward / 6-month reset (from join date) + calculate points
-        const applied = this.applyCarryForward(member, totals);
+        const applied: any = this.applyCarryForward(member, totals);
 
         // 4️⃣ Update period
         period.metrics = totals;
@@ -127,72 +129,143 @@ export default class PeriodReportController {
 
     /** Fetch counts for given member and period */
     private async fetchCounts(memberId: string, start: Date, end: Date) {
+
+        // TRAININGS ATTENDED (Present Only)
+        // ATTENDANCE - ONLY FOR TRAINING MEETINGS (16th→15th month logic respected)
+        const trainingData = await Attendance.aggregate([
+            {
+                $match: {
+                    memberId: new ObjectId(memberId),
+                    status: "present",
+                    isDelete: 0
+                }
+            },
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "meetingId",
+                    foreignField: "_id",
+                    as: "payment"
+                }
+            },
+            { $unwind: "$payment" },
+
+            // Filter to only TRAINING sessions
+            {
+                $addFields: {
+                    purpose: { $toLower: "$payment.purpose" },
+                    sessionDate: "$payment.startDate"
+                }
+            },
+            {
+                $match: {
+                    purpose: "training",
+                    sessionDate: { $gte: start, $lte: end }
+                }
+            },
+            { $count: "trainingDays" }
+        ]);
+
+        const attendanceData = await Attendance.aggregate([
+            {
+                $match: {
+                    memberId: new ObjectId(memberId),
+                    status: "present",
+                    isDelete: 0
+                }
+            },
+            {
+                $lookup: {
+                    from: "payments",
+                    localField: "meetingId",
+                    foreignField: "_id",
+                    as: "payment"
+                }
+            },
+            { $unwind: "$payment" },
+
+            // Normalize purpose + extract date from payment
+            {
+                $addFields: {
+                    purpose: { $toLower: "$payment.purpose" },
+                    sessionDate: "$payment.startDate" // session happening date
+                }
+            },
+
+            // Only meetings — NOT training, NOT others
+            {
+                $match: {
+                    purpose: "meeting",
+                    sessionDate: { $gte: start, $lte: end }  // your 16th→15th logic
+                }
+            },
+
+            { $count: "attendanceDays" }
+        ]);
+
+        const trainingDays =
+            trainingData?.length > 0 ? trainingData[0].trainingDays : 0;
+
+        const attendanceDays = attendanceData?.[0]?.attendanceDays ?? 0;
+
+
+
+        // FINAL RETURN OBJECT
         return {
             oneToOne: await OneToOne.countDocuments({ fromMember: memberId, createdAt: { $gte: start, $lte: end } }),
             referrals: await ReferralSlipModel.countDocuments({ fromMember: memberId, createdAt: { $gte: start, $lte: end } }),
             visitors: await Visitor.countDocuments({ invitedBy: memberId, createdAt: { $gte: start, $lte: end } }),
-            trainings: await Payment.countDocuments({ memberId, date: { $gte: start, $lte: end } }),
+            trainings: trainingDays,                   //  <-- Final Correct Value ✔
             business: await thankyouslipModel.aggregate([
-                { $match: { fromMember: memberId, createdAt: { $gte: start, $lte: end } } },
+                { $match: { fromMember: new mongoose.Types.ObjectId(memberId), createdAt: { $gte: start, $lte: end } } },
                 { $group: { _id: null, total: { $sum: "$amount" } } }
             ]).then(r => r[0]?.total || 0),
             testimonials: await TestimonialSlip.countDocuments({ fromMember: memberId, createdAt: { $gte: start, $lte: end } }),
-            attendanceDays: await Attendance.countDocuments({ memberId, isPresent: true, date: { $gte: start, $lte: end } }),
-            onTimeDays: await Attendance.countDocuments({ memberId, onTime: true, date: { $gte: start, $lte: end } })
+            attendanceDays: attendanceDays,
         };
     }
 
     /** Apply carry-forward and calculate points */
-    private applyCarryForward(member: any, totals: Record<string, Record<Key, number>>) {
-        let cf: Record<Key, number> = member.carryForward || { oneToOne: 0, referrals: 0, visitors: 0 };
-        const used: Record<Key, number> = { oneToOne: 0, referrals: 0, visitors: 0 };
+    private applyCarryForward(member: any, totals: Record<string, any>) {
 
-        const months = Object.keys(totals);
-        const score: Record<Key, number> = { oneToOne: 0, referrals: 0, visitors: 0 };
-        const monthlyScore: Record<string, Record<Key, number>> = {};
+        const finalScore: Record<string, number> = {
+            oneToOne: 0, referrals: 0, visitors: 0,
+            trainings: 0, business: 0, testimonials: 0,
+            attendance: 0
+        };
 
-        months.forEach(month => {
-            monthlyScore[month] = { oneToOne: 0, referrals: 0, visitors: 0 };
+        const monthlyScore: Record<string, any> = {};
 
-            (["oneToOne", "referrals", "visitors"] as Key[]).forEach(key => {
-                const min = MINIMUMS[`${key}PerMonth` as keyof typeof MINIMUMS];
-                const maxPoint = MAX_POINTS[key];
+        Object.keys(totals).forEach(month => {
+            const m = totals[month];
 
-                // Carry-forward adjustment
-                if (totals[month][key] < min) {
-                    const need = min - totals[month][key];
-                    const take = Math.min(cf[key] || 0, need);
-                    totals[month][key] += take;
-                    used[key] += take;
-                    cf[key] -= take;
-                }
+            function calculateScore(count: number, minimum: number, maxPoints: number) {
+                if (count >= minimum) return maxPoints;       // full points
+                return Number(((count / minimum) * maxPoints).toFixed(2)); // proportional
+            }
 
-                // Monthly points calculation
-                const actualCount = totals[month][key];
-                let monthlyPoints = 0;
-                if (actualCount >= min) monthlyPoints = maxPoint;
-                else monthlyPoints = (actualCount / min) * maxPoint;
+            monthlyScore[month] = {
+                oneToOne: calculateScore(m.oneToOne, MINIMUMS.oneToOnePerMonth, MAX_POINTS.oneToOne),
+                referrals: calculateScore(m.referrals, MINIMUMS.referralsPerMonth, MAX_POINTS.referrals),
+                visitors: calculateScore(m.visitors, MINIMUMS.visitorsPerMonth, MAX_POINTS.visitors),
+                trainings: calculateScore(m.trainings, MINIMUMS.trainingsPerMonth, MAX_POINTS.trainings),
+                business: calculateScore(m.business, MINIMUMS.businessPerMonth, MAX_POINTS.business),
+                testimonials: calculateScore(m.testimonials, MINIMUMS.testimonialsPerMonth, MAX_POINTS.testimonials),
+                attendance: calculateScore(m.attendanceDays, MINIMUMS.attendancePerMonth, MAX_POINTS.attendance),
+            };
 
-                monthlyScore[month][key] = monthlyPoints;
-                score[key] += monthlyPoints;
+            // overwrite business with capped rule
+            monthlyScore[month].business =
+                m.business >= MINIMUMS.businessPerMonth ? MAX_POINTS.business : monthlyScore[month].business;
+
+            // Add to final total score
+            Object.keys(monthlyScore[month]).forEach(key => {
+                finalScore[key] += monthlyScore[month][key];
             });
         });
 
-        // Reset CF every 6 months from join date
-        const monthsSinceJoin = Math.floor(
-            (new Date().getTime() - new Date(member.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
-        );
-        if (monthsSinceJoin >= 6) cf = { oneToOne: 0, referrals: 0, visitors: 0 };
-
-        member.carryForward = cf;
-        member.periodHalfCount = monthsSinceJoin % 6;
-        member.save();
-
-        return { used, score, cfRemaining: cf, monthlyScore };
+        return { score: finalScore, monthlyScore };
     }
-
-
-
 
 
 }

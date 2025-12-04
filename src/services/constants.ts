@@ -1,21 +1,18 @@
 export const MINIMUMS = {
-    oneToOnePerMonth: 8,
-    referralsPerMonth: 6,
-    visitorsPerMonth: 1,
-    trainingsPerMonth: 1,
-    businessPerMonth: 300000,
-    testimonialsIn6Months: 2
+    oneToOnePerMonth: 8,          // gives 10 pts
+    referralsPerMonth: 6,         // gives 15 pts
+    visitorsPerMonth: 1,          // gives 20 pts
+    trainingsPerMonth: 1,         // gives 15 pts
+    businessPerMonth: 300000,     // 18 lakhs / 6 months ≈ 3 Lakhs per month → gives 20 pts
+    testimonialsPerMonth: 1,    // For monthly calculation we divide by 6
+    attendancePerMonth:1
 } as const;
 
-// Helper type for indexing
-type MinKeys = 'oneToOne' | 'referrals' | 'visitors' | 'trainings' | 'business' | 'testimonials';
 
-// Function to safely get monthly minimum
-export const getMinimum = (key: MinKeys): number => {
-    if (key === 'testimonials') return MINIMUMS.testimonialsIn6Months / 6; // distribute over 6 months
-    return MINIMUMS[`${key}PerMonth` as keyof typeof MINIMUMS] / 2; // half-month
-};
 
+/** ===========================
+      MAXIMUM SCORE PER MONTH
+===============================**/
 export const MAX_POINTS = {
     oneToOne: 10,
     referrals: 15,
@@ -23,6 +20,5 @@ export const MAX_POINTS = {
     trainings: 15,
     business: 20,
     testimonials: 10,
-    attendance: 7.5,
-    onTime: 7.5
+    attendance: 10,   // your defined value
 } as const;
