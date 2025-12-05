@@ -531,13 +531,18 @@ export default class MemberController {
   @Get("/:id")
   async getMember(@Param("id") id: string, @Res() res: Response) {
     try {
-      const member = await Member.findOne({ _id: id, isDelete: 0 })
+      const member = await Member.findOne({
+        _id: id,
+        isDelete: 0,
+        status: "active",
+      })
         .populate("chapterInfo.zoneId", "zoneName")
         .populate("chapterInfo.chapterId", "chapterName")
         .populate("chapterInfo.CIDId", "name email");
 
       if (!member) {
-        throw new NotFoundError("Member not found");
+        // throw new NotFoundError("Member not found");
+        throw new NotFoundError("Active member not found");
       }
 
       return res.status(200).json({
