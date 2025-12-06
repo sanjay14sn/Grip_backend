@@ -107,10 +107,22 @@ export default class ExpectedVisitorsController {
 
       const { fromDate, toDate } = req.query;
 
+      // if (fromDate && toDate) {
+      //   filter.createdAt = {
+      //     $gte: new Date(fromDate as string),
+      //     $lte: new Date(toDate as string),
+      //   };
+      // }
       if (fromDate && toDate) {
-        filter.visitDate = {
-          $gte: new Date(fromDate as string),
-          $lte: new Date(toDate as string),
+        const start = new Date(fromDate as string);
+        start.setHours(0, 0, 0, 0); // 00:00:00
+
+        const end = new Date(toDate as string);
+        end.setHours(23, 59, 59, 999); // 23:59:59
+
+        filter.createdAt = {
+          $gte: start,
+          $lte: end,
         };
       }
 
