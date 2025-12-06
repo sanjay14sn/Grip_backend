@@ -347,12 +347,25 @@ Grip Forum
       query.comments = { $regex: search, $options: "i" };
     }
 
+    // if (fromDate && toDate) {
+    //   query.createdAt = {
+    //     $gte: new Date(fromDate),
+    //     $lte: new Date(toDate),
+    //   };
+    // }
     if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+
       query.createdAt = {
-        $gte: new Date(fromDate),
-        $lte: new Date(toDate),
+        $gte: start,
+        $lte: end,
       };
     }
+
 
     try {
       const [records, total] = await Promise.all([
